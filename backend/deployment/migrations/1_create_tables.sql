@@ -1,12 +1,12 @@
-CREATE TABLE users (
+CREATE TABLE lms.users (
     id         TEXT PRIMARY KEY,
     name       TEXT NOT NULL,
-    username   TEXT NOT NULL UNIQUE, // connect with auth_users using this
+    username   TEXT NOT NULL UNIQUE, -- connect with auth_users using this
     role       TEXT NOT NULL,
     member_id  TEXT
 );
 
-CREATE TABLE bookings (
+CREATE TABLE lms.bookings (
     id          BIGSERIAL PRIMARY KEY,
     library_id  BIGINT NOT NULL,
     start_time  TIMESTAMPTZ NOT NULL,
@@ -15,26 +15,26 @@ CREATE TABLE bookings (
     CHECK (end_time > start_time)
 );
 
-CREATE TABLE admin_library_mapping (
+CREATE TABLE lms.admin_library_mapping (
     id          BIGSERIAL PRIMARY KEY,
     library_id  BIGINT NOT NULL,
     member_id   TEXT NOT NULL
 );
 
-CREATE TABLE counters (
+CREATE TABLE lms.counters (
     id      BIGSERIAL PRIMARY KEY,
     name    TEXT NOT NULL UNIQUE,
     value   BIGINT NOT NULL
 );
 
-CREATE TABLE credits (
+CREATE TABLE lms.credits (
     id           BIGSERIAL PRIMARY KEY,
     entity_id    TEXT NOT NULL,
     entity_type  TEXT NOT NULL,
     value        DOUBLE PRECISION NOT NULL
 );
 
-CREATE TABLE credits_history (
+CREATE TABLE lms.credits_history (
     id           BIGSERIAL PRIMARY KEY,
     entity_id    TEXT NOT NULL,
     entity_type  TEXT NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE credits_history (
     reason       TEXT NOT NULL
 );
 
-CREATE TABLE libraries (
+CREATE TABLE lms.libraries (
     id         BIGSERIAL PRIMARY KEY,
     name       TEXT NOT NULL,
     latitude   DOUBLE PRECISION NOT NULL,

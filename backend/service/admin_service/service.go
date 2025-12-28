@@ -13,6 +13,10 @@ func (s *service) CreateLibrary(ctx context.Context, req CreateLibraryReq) (resp
 	return resp, nil
 }
 
+func (s *service) DeleteLibrary(ctx context.Context, req DeleteLibraryReq) (resp DeleteLibraryResp, err error) {
+	return resp, nil
+}
+
 func (s *service) GetLibraries(ctx context.Context, req GetLibrariesReq) (resp GetLibrariesResp, err error) {
 	return resp, nil
 }

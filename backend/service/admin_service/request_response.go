@@ -40,3 +40,10 @@ type AddAdminLibMappingReq struct {
 
 type AddAdminLibMappingResp struct {
 }
+
+type DeleteLibraryReq struct {
+	Id uint32
+}
+
+type DeleteLibraryResp struct {
+}
