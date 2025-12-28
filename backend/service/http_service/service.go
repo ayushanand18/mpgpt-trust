@@ -17,13 +17,18 @@ func RegisterServer(ctx context.Context) (err error) {
 		return "Hello World.", nil
 	})
 
+	// UserService
 	server.GET("/user/{id}")   // get userinfo <- admin/superuser/user auth
 	server.POST("/user")       // will create user <- behind superuser auth
 	server.PATCH("/user/{id}") // will update some part of user <- admin/superuser/user auth
 	server.GET("/users")       // fetch user information from some params <- admin/superuser auth
 
-	server.POST("/user/{id}/credits")  // add credits to user <- admin/superuser auth
-	server.POST("/user/{id}/bookings") // add a new booking for a user <- admin/superuser/user auth
+	// BookingService
+	server.POST("/user/{id}/bookings")   // add a new booking for a user <- admin/superuser/user auth
+	server.GET("/library/{id}/bookings") // view bookings on a library
+
+	// AdminService
+	server.POST("/user/{id}/credits") // add credits to user <- admin/superuser auth
 
 	server.POST("/library")     // add a new library <- superuser auth
 	server.GET("/library/{id}") // get library specific info <- public
