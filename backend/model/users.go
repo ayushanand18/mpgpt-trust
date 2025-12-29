@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	"github.com/ayushanand18/mpgpt-trust/backend/utils"
 	"gorm.io/gorm"
 )
 
@@ -84,7 +85,7 @@ func UpdateUser(tx *gorm.DB, req UpdateUserReq) error {
 		updateMap["member_id"] = req.MemberId
 	}
 
-	updateMap["updated_at"] = time.Now()
+	updateMap["updated_at"] = utils.GetCurrentTimeInIst()
 
 	queryResp := tx.Table(User{}.TableName()).Where("id = ?", req.Id).Updates(updateMap)
 	if queryResp.Error != nil {
@@ -107,7 +108,7 @@ type CreateUserReq struct {
 func CreateUser(tx *gorm.DB, req CreateUserReq) (User, error) {
 	user := User{
 		Id:        req.Id,
-		UpdatedAt: time.Now(),
+		UpdatedAt: utils.GetCurrentTimeInIst(),
 	}
 
 	queryResp := tx.Table(User{}.TableName()).Create(&user)

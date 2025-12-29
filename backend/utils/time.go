@@ -25,3 +25,8 @@ func GetPastTime() time.Time {
 	pastTime := now.AddDate(-1, 0, 0)
 	return pastTime
 }
+
+func GetCurrentTimeInIst() time.Time {
+	loc, _ := time.LoadLocation("Asia/Kolkata")
+	return time.Now().In(loc)
+}

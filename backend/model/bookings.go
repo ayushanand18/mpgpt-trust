@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	"github.com/ayushanand18/mpgpt-trust/backend/utils"
 	"gorm.io/gorm"
 )
 
@@ -13,6 +14,7 @@ type Bookings struct {
 	StartTime time.Time `gorm:"start_time"`
 	EndTime   time.Time `gorm:"end_time"`
 	Status    string    `gorm:"status"` // status: [active, cancelled]
+	CreatedAt time.Time `gorm:"created_at"`
 }
 
 func (b Bookings) TableName() string {
@@ -51,4 +53,28 @@ func GetBookings(tx *gorm.DB, req GetBookingsReq) ([]Bookings, error) {
 	}
 
 	return bookings, nil
+}
+
+type CreateBookingReq struct {
+	MemberId  string
+	LibraryId uint32
+	StartTime time.Time
+	EndTime   time.Time
+}
+
+func CreateBooking(tx *gorm.DB, req CreateBookingReq) (Bookings, error) {
+	booking := Bookings{
+		MemberId:  req.MemberId,
+		LibraryId: req.LibraryId,
+		StartTime: req.StartTime,
+		EndTime:   req.EndTime,
+		Status:    "active",
+		CreatedAt: utils.GetCurrentTimeInIst(),
+	}
+
+	if err := tx.Table(Bookings{}.TableName()).Create(&booking).Error; err != nil {
+		return Bookings{}, err
+	}
+
+	return booking, nil
 }

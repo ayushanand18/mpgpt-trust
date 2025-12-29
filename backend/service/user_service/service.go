@@ -11,6 +11,10 @@ import (
 
 type service struct{}
 
+func NewUserService(ctx context.Context) *service {
+	return &service{}
+}
+
 // GetUser
 // 1. fetch user details based on user id
 func (s *service) GetUser(ctx context.Context, req GetUserReq) (resp GetUserResp, err error) {

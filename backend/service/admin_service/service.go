@@ -12,6 +12,10 @@ import (
 type service struct {
 }
 
+func NewAdminService(ctx context.Context) *service {
+	return &service{}
+}
+
 // UpdateCredits
 // 1. increment credits value in credits table for the entity
 func (s *service) UpdateCredits(ctx context.Context, req UpdateCreditsReq) (resp UpdateCreditsResp, err error) {

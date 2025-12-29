@@ -16,3 +16,15 @@ type GetBookingsReq struct {
 type GetBookingsResp struct {
 	Bookings []model.Bookings
 }
+
+type CreateBookingReq struct {
+	UserId    string // to be decoded from request
+	MemberId  string // fetched from user -> member mapping
+	LibraryId uint32
+	StartTime time.Time
+	EndTime   time.Time
+}
+
+type CreateBookingResp struct {
+	Booking model.Bookings
+}

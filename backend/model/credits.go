@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	"github.com/ayushanand18/mpgpt-trust/backend/utils"
 	"gorm.io/gorm"
 )
 
@@ -33,7 +34,7 @@ type UpdateCreditsReq struct {
 
 func UpdateCredits(tx *gorm.DB, req UpdateCreditsReq) error {
 	updateMap := make(map[string]interface{})
-	updateMap["updated_at"] = time.Now()
+	updateMap["updated_at"] = utils.GetCurrentTimeInIst()
 	updateMap["updated_by"] = req.UserId
 	updateMap["updated_by_type"] = req.UserType
 	updateMap["value"] = gorm.Expr("value + ?", req.ValueChange)
