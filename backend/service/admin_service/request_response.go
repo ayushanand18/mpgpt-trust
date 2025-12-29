@@ -3,10 +3,12 @@ package adminservice
 import "github.com/ayushanand18/mpgpt-trust/backend/model"
 
 type UpdateCreditsReq struct {
-	UserId        string
+	MemberId      string
 	CreditsAmount float64
 	RefNumber     string // UTR Number for addition/bookingId for deduction
 	Comment       string
+	UserId        string
+	UserType      string
 }
 
 type UpdateCreditsResp struct {
@@ -25,8 +27,9 @@ type CreateLibraryResp struct {
 }
 
 type GetLibrariesReq struct {
-	UserId    string
-	LibraryId uint32
+	MemberId    string
+	LibraryId   uint32
+	LibraryName string
 }
 
 type GetLibrariesResp struct {
@@ -34,7 +37,7 @@ type GetLibrariesResp struct {
 }
 
 type AddAdminLibMappingReq struct {
-	UserId    string
+	MemberId  string
 	LibraryId uint32
 }
 
