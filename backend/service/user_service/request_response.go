@@ -39,6 +39,7 @@ type CreateUserReq struct {
 	MemberId    string
 	Email       string
 	PhoneNumber string
+	Role        string
 }
 
 type CreateUserResp struct {

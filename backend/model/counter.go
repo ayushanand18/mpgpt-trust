@@ -23,6 +23,11 @@ const (
 	AdminStudentId  EntityName = "admin_mem_id"
 )
 
+const (
+	CounterPrefixStudent = "S%08d" // S followed by zero-padded 8 digit number
+	CounterPrefixAdmin   = "A%08d"
+)
+
 type IncrementCounterAndGetValueReq struct {
 	EntityName EntityName
 }

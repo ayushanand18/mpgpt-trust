@@ -1,10 +1,16 @@
 package bookingservice
 
-import "github.com/ayushanand18/mpgpt-trust/backend/model"
+import (
+	"time"
+
+	"github.com/ayushanand18/mpgpt-trust/backend/model"
+)
 
 type GetBookingsReq struct {
-	UserIds    []string
+	MemberIds  []string
 	LibraryIds []uint32
+	StartTime  time.Time
+	EndTime    time.Time
 }
 
 type GetBookingsResp struct {

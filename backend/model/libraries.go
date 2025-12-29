@@ -35,7 +35,7 @@ func CreateLibrary(tx *gorm.DB, req CreateLibraryReq) (Library, error) {
 
 	queryResp := tx.Table(Library{}.TableName()).Create(&library)
 	if queryResp.Error != nil {
-		return queryResp.Error
+		return library, queryResp.Error
 	}
 
 	return library, nil

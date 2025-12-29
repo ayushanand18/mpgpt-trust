@@ -40,7 +40,7 @@ type GetAdminLibraryMappingsReq struct {
 func GetAdminLibraryMappings(tx *gorm.DB, req GetAdminLibraryMappingsReq) ([]uint32, error) {
 	var mappings []AdminLibraryMapping
 	query := tx.Table(AdminLibraryMapping{}.TableName()).
-		Where("member_id = ?", req.UserId)
+		Where("member_id = ?", req.MemberId)
 
 	if err := query.Find(&mappings).Error; err != nil {
 		return nil, err
