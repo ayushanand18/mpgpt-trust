@@ -3,6 +3,7 @@ package environment
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -12,8 +13,30 @@ import (
 
 var _dbConn *gorm.DB
 
+// DSN string is of the form
+//
+// "host=localhost user=app_user password=secret123 dbname=mydb port=5432 sslmode=disable TimeZone=Asia/Kolkata"
+func getDSNString() string {
+	host := os.Getenv("SUPABASE_DB_HOST")
+	port := os.Getenv("SUPABASE_DB_PORT")
+	user := os.Getenv("SUPABASE_DB_USER")
+	password := os.Getenv("SUPABASE_DB_PASSWORD")
+	dbname := os.Getenv("SUPABASE_DB_NAME")
+	sslmode := os.Getenv("SUPABASE_DB_SSLMODE")
+	if len(sslmode) == 0 {
+		sslmode = "enable"
+	}
+
+	timezone := os.Getenv("SUPABASE_DB_TIMEZONE")
+	if len(timezone) == 0 {
+		timezone = "Asia/Kolkata"
+	}
+
+	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s", host, user, password, dbname, port, sslmode, timezone)
+}
+
 func InitDB() error {
-	writeDSN := os.Getenv("SUPABASE_DB_WRITE_DSN")
+	writeDSN := getDSNString()
 
 	if writeDSN == "" {
 		return errors.New("database DSNs not set")

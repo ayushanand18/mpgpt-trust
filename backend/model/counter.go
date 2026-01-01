@@ -7,13 +7,13 @@ import (
 )
 
 type Counter struct {
-	Id    uint32 `gorm:"id,primaryKey"`
-	Name  string `gorm:"name"`
-	Value uint64 `gorm:"value"`
+	Id    uint32 `gorm:"column:id;primaryKey"`
+	Name  string `gorm:"column:name"`
+	Value uint64 `gorm:"column:value"`
 }
 
 func (b Counter) TableName() string {
-	return "counters"
+	return "lms.counters"
 }
 
 type EntityName string
@@ -42,7 +42,7 @@ func IncrementCounterAndGetValue(
 
 	err := tx.WithContext(ctx).
 		Raw(`
-			UPDATE counters
+			UPDATE "lms"."counters"
 			SET value = value + 1
 			WHERE name = ?
 			RETURNING value

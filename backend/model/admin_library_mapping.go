@@ -5,13 +5,13 @@ import (
 )
 
 type AdminLibraryMapping struct {
-	Id        uint32 `gorm:"id,primaryKey"`
-	LibraryId uint32 `gorm:"library_id"`
-	MemberId  string `gorm:"member_id"`
+	Id        uint32 `gorm:"column:id;primaryKey"`
+	LibraryId uint32 `gorm:"column:library_id"`
+	MemberId  string `gorm:"column:member_id"`
 }
 
 func (b AdminLibraryMapping) TableName() string {
-	return "admin_library_mapping"
+	return "lms.admin_library_mapping"
 }
 
 type AddAdminLibMappingReq struct {

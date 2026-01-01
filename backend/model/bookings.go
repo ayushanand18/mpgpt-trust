@@ -8,17 +8,17 @@ import (
 )
 
 type Bookings struct {
-	Id        uint32    `gorm:"id,primaryKey"`
-	LibraryId uint32    `gorm:"library_id"`
-	MemberId  string    `gorm:"member_id"`
-	StartTime time.Time `gorm:"start_time"`
-	EndTime   time.Time `gorm:"end_time"`
-	Status    string    `gorm:"status"` // status: [active, cancelled]
-	CreatedAt time.Time `gorm:"created_at"`
+	Id        uint32    `gorm:"column:id;primaryKey"`
+	LibraryId uint32    `gorm:"column:library_id"`
+	MemberId  string    `gorm:"column:member_id"`
+	StartTime time.Time `gorm:"column:start_time"`
+	EndTime   time.Time `gorm:"column:end_time"`
+	Status    string    `gorm:"column:status"` // status: [active, cancelled]
+	CreatedAt time.Time `gorm:"column:created_at"`
 }
 
 func (b Bookings) TableName() string {
-	return "bookings"
+	return "lms.bookings"
 }
 
 type GetBookingsReq struct {

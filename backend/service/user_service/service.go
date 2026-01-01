@@ -79,8 +79,8 @@ func (s *service) CreateUser(ctx context.Context, req CreateUserReq) (resp Creat
 
 	// first get user by id to check if user already exists
 	var newUser model.User
-	newUser, err = model.GetUserById(tx, req.Id)
-	if err == nil {
+	newUser, userErr := model.GetUserById(tx, req.Id)
+	if userErr == nil {
 		// user already exists
 		resp.Id = newUser.Id
 		resp.MemberId = newUser.MemberId

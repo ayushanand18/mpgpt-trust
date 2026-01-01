@@ -8,20 +8,20 @@ import (
 )
 
 type Credits struct {
-	Id            uint32    `gorm:"id,primaryKey"`
-	EntityId      string    `gorm:"entity_id"`   // member_id
-	EntityType    string    `gorm:"entity_type"` // member
-	Value         float64   `gorm:"value"`       // value
-	UpdatedAt     time.Time `gorm:"updated_at"`
-	UpdatedBy     string    `gorm:"updated_by"`
-	UpdatedByType string    `gorm:"updated_by_type"`
-	CreatedAt     time.Time `gorm:"created_at"`
-	CreatedBy     string    `gorm:"created_by"`
-	CreatedByType string    `gorm:"created_by_type"`
+	Id            uint32    `gorm:"column:id;primaryKey"`
+	EntityId      string    `gorm:"column:entity_id"`   // member_id
+	EntityType    string    `gorm:"column:entity_type"` // member
+	Value         float64   `gorm:"column:value"`       // value
+	UpdatedAt     time.Time `gorm:"column:updated_at"`
+	UpdatedBy     string    `gorm:"column:updated_by"`
+	UpdatedByType string    `gorm:"column:updated_by_type"`
+	CreatedAt     time.Time `gorm:"column:created_at"`
+	CreatedBy     string    `gorm:"column:created_by"`
+	CreatedByType string    `gorm:"column:created_by_type"`
 }
 
 func (b Credits) TableName() string {
-	return "credits"
+	return "lms.credits"
 }
 
 type UpdateCreditsReq struct {
