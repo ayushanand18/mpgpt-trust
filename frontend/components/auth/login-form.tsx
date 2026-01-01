@@ -16,6 +16,7 @@ export function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
+    
     // Implement Google sign-in logic here
     setTimeout(() => setIsLoading(false), 2000)
   }
@@ -23,6 +24,7 @@ export function LoginForm() {
   const handleEmailPhoneSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    
     // Implement email/phone sign-in logic here
     setTimeout(() => setIsLoading(false), 2000)
   }
@@ -87,33 +89,14 @@ export function LoginForm() {
             </div>
 
             <form onSubmit={handleEmailPhoneSignIn} className="space-y-4">
-              <div className="flex gap-2 mb-4">
-                <Button
-                  type="button"
-                  variant={loginMethod === "email" ? "default" : "outline"}
-                  className="flex-1 h-9 text-sm"
-                  onClick={() => setLoginMethod("email")}
-                >
-                  Email
-                </Button>
-                <Button
-                  type="button"
-                  variant={loginMethod === "phone" ? "default" : "outline"}
-                  className="flex-1 h-9 text-sm"
-                  onClick={() => setLoginMethod("phone")}
-                >
-                  Phone
-                </Button>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="login-input" className="text-sm font-medium">
-                  {loginMethod === "email" ? "Email Address" : "Phone Number"}
+                  Email or Phone Number
                 </Label>
                 <Input
                   id="login-input"
-                  type={loginMethod === "email" ? "email" : "tel"}
-                  placeholder={loginMethod === "email" ? "name@example.com" : "+1 (555) 000-0000"}
+                  type={"text"}
+                  placeholder={"name@example.com/0000-000-000"}
                   className="h-11"
                   required
                 />
@@ -182,25 +165,6 @@ export function LoginForm() {
             </div>
 
             <form onSubmit={handleEmailPhoneSignIn} className="space-y-4">
-              <div className="flex gap-2 mb-4">
-                <Button
-                  type="button"
-                  variant={loginMethod === "email" ? "default" : "outline"}
-                  className="flex-1 h-9 text-sm"
-                  onClick={() => setLoginMethod("email")}
-                >
-                  Email
-                </Button>
-                <Button
-                  type="button"
-                  variant={loginMethod === "phone" ? "default" : "outline"}
-                  className="flex-1 h-9 text-sm"
-                  onClick={() => setLoginMethod("phone")}
-                >
-                  Phone
-                </Button>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="signup-name" className="text-sm font-medium">
                   Full Name
@@ -210,12 +174,12 @@ export function LoginForm() {
 
               <div className="space-y-2">
                 <Label htmlFor="signup-input" className="text-sm font-medium">
-                  {loginMethod === "email" ? "Email Address" : "Phone Number"}
+                  Email or Phone Number
                 </Label>
                 <Input
                   id="signup-input"
-                  type={loginMethod === "email" ? "email" : "tel"}
-                  placeholder={loginMethod === "email" ? "name@example.com" : "+1 (555) 000-0000"}
+                  type={"text"}
+                  placeholder={"name@example.com/0000-000-000"}
                   className="h-11"
                   required
                 />
