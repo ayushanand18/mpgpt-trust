@@ -35,6 +35,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		request := req.(userservice.GetUserReq)
 		return userService.GetUser(ctx, request)
 	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+		populateUserIdAndRoleFromHttpRequest(ctx, r)
+
 		pathValues := ctx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
 		id := pathValues["id"]
 		request = userservice.GetUserReq{
@@ -42,13 +44,16 @@ func RegisterServer(ctx context.Context) (err error) {
 		}
 		return request, nil
 	}).WithEncoder(GenericEncoder()).
-		WithErrorEncoder(ErrorEncoder())
+		WithErrorEncoder(ErrorEncoder()).
+		WithBeforeServe(AuthMiddleware())
 
-	// will create user <- behind superuser auth
+	// will create user <- behind superuser/user auth
 	server.POST("/user").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(userservice.CreateUserReq)
 		return userService.CreateUser(ctx, request)
 	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+		populateUserIdAndRoleFromHttpRequest(ctx, r)
+
 		var req userservice.CreateUserReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
@@ -56,13 +61,16 @@ func RegisterServer(ctx context.Context) (err error) {
 		}
 		return req, nil
 	}).WithEncoder(GenericEncoder()).
-		WithErrorEncoder(ErrorEncoder())
+		WithErrorEncoder(ErrorEncoder()).
+		WithBeforeServe(AuthMiddleware())
 
 	// will update some part of user <- admin/superuser/user auth
 	server.PATCH("/user/{id}").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(userservice.UpdateUserReq)
 		return userService.UpdateUser(ctx, request)
 	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+		populateUserIdAndRoleFromHttpRequest(ctx, r)
+
 		paramsMap := ctx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
 		var req userservice.UpdateUserReq
 		err = json.NewDecoder(r.Body).Decode(&req)
@@ -72,13 +80,16 @@ func RegisterServer(ctx context.Context) (err error) {
 		req.Id = paramsMap["id"]
 		return req, nil
 	}).WithEncoder(GenericEncoder()).
-		WithErrorEncoder(ErrorEncoder())
+		WithErrorEncoder(ErrorEncoder()).
+		WithBeforeServe(AuthMiddleware())
 
 	// fetch user information from some params <- admin/superuser auth
 	server.POST("/users").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(userservice.GetUsersReq)
 		return userService.GetUsers(ctx, request)
 	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+		populateUserIdAndRoleFromHttpRequest(ctx, r)
+
 		var req userservice.GetUsersReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
@@ -86,7 +97,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		}
 		return req, nil
 	}).WithEncoder(GenericEncoder()).
-		WithErrorEncoder(ErrorEncoder())
+		WithErrorEncoder(ErrorEncoder()).
+		WithBeforeServe(AuthMiddleware())
 
 	// BookingService
 	// add a new booking for a user <- admin/superuser/user auth
@@ -94,6 +106,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		request := i.(bookingservice.CreateBookingReq)
 		return bookingService.CreateBooking(ctx, request)
 	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+		populateUserIdAndRoleFromHttpRequest(ctx, r)
+
 		var req bookingservice.CreateBookingReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
@@ -101,7 +115,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		}
 		return req, nil
 	}).WithEncoder(GenericEncoder()).
-		WithErrorEncoder(ErrorEncoder())
+		WithErrorEncoder(ErrorEncoder()).
+		WithBeforeServe(AuthMiddleware())
 
 	// view bookings on a library
 	server.POST("/bookings").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -115,7 +130,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		}
 		return req, nil
 	}).WithEncoder(GenericEncoder()).
-		WithErrorEncoder(ErrorEncoder())
+		WithErrorEncoder(ErrorEncoder()).
+		WithBeforeServe(AuthMiddleware())
 
 	// AdminService
 	// add credits to user <- admin/superuser auth
@@ -123,6 +139,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		request := i.(adminservice.UpdateCreditsReq)
 		return adminService.UpdateCredits(ctx, request)
 	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+		populateUserIdAndRoleFromHttpRequest(ctx, r)
+
 		var req userservice.CreateUserReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
@@ -132,13 +150,16 @@ func RegisterServer(ctx context.Context) (err error) {
 		req.Id = paramMap["id"]
 		return req, nil
 	}).WithEncoder(GenericEncoder()).
-		WithErrorEncoder(ErrorEncoder())
+		WithErrorEncoder(ErrorEncoder()).
+		WithBeforeServe(AuthMiddleware())
 
 	// add a new library <- superuser auth
 	server.POST("/library").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(adminservice.CreateLibraryReq)
 		return adminService.CreateLibrary(ctx, request)
 	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+		populateUserIdAndRoleFromHttpRequest(ctx, r)
+
 		var req adminservice.CreateLibraryReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
@@ -146,13 +167,16 @@ func RegisterServer(ctx context.Context) (err error) {
 		}
 		return req, nil
 	}).WithEncoder(GenericEncoder()).
-		WithErrorEncoder(ErrorEncoder())
+		WithErrorEncoder(ErrorEncoder()).
+		WithBeforeServe(AuthMiddleware())
 
 	// get all libraries info <- public
 	server.GET("/libraries").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(adminservice.GetLibrariesReq)
 		return adminService.GetLibraries(ctx, request)
 	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+		populateUserIdAndRoleFromHttpRequest(ctx, r)
+
 		var req adminservice.GetLibrariesReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
@@ -167,6 +191,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		request := i.(adminservice.DeleteLibraryReq)
 		return adminService.DeleteLibrary(ctx, request)
 	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+		populateUserIdAndRoleFromHttpRequest(ctx, r)
+
 		var req adminservice.DeleteLibraryReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
@@ -174,13 +200,16 @@ func RegisterServer(ctx context.Context) (err error) {
 		}
 		return req, nil
 	}).WithEncoder(GenericEncoder()).
-		WithErrorEncoder(ErrorEncoder())
+		WithErrorEncoder(ErrorEncoder()).
+		WithBeforeServe(AuthMiddleware())
 
 	// add admin - library mapping <- superuser auth
 	server.POST("/user/{id}/library").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(adminservice.AddAdminLibMappingReq)
 		return adminService.AddAdminLibMapping(ctx, request)
 	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+		populateUserIdAndRoleFromHttpRequest(ctx, r)
+
 		var req userservice.CreateUserReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
@@ -190,7 +219,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		req.Id = paramMap["id"]
 		return req, nil
 	}).WithEncoder(GenericEncoder()).
-		WithErrorEncoder(ErrorEncoder())
+		WithErrorEncoder(ErrorEncoder()).
+		WithBeforeServe(AuthMiddleware())
 
 	if err := server.ListenAndServe(ctx); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
