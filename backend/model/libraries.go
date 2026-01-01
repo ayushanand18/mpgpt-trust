@@ -3,17 +3,17 @@ package model
 import "gorm.io/gorm"
 
 type Library struct {
-	Id        uint32  `gorm:"id,primaryKey"`
-	Name      string  `gorm:"name"`
-	Latitude  float64 `gorm:"latitude"`
-	Longitude float64 `gorm:"longitude"`
-	Address   string  `gorm:"address"`
-	Remarks   float64 `gorm:"remarks"`
-	Status    string  `gorm:"status"` // status: active, closed
+	Id        uint32  `gorm:"column:id;primaryKey"`
+	Name      string  `gorm:"column:name"`
+	Latitude  float64 `gorm:"column:latitude"`
+	Longitude float64 `gorm:"column:longitude"`
+	Address   string  `gorm:"column:address"`
+	Remarks   float64 `gorm:"column:remarks"`
+	Status    string  `gorm:"column:status"` // status: active, closed
 }
 
 func (b Library) TableName() string {
-	return "libraries"
+	return "lms.libraries"
 }
 
 type CreateLibraryReq struct {

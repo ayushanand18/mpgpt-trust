@@ -4,16 +4,17 @@ import (
 	"context"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Counter struct {
-	Id    uint32 `gorm:"id,primaryKey"`
-	Name  string `gorm:"name"`
-	Value uint64 `gorm:"value"`
+	Id    uint32 `gorm:"column:id;primaryKey"`
+	Name  string `gorm:"column:name"`
+	Value uint64 `gorm:"column:value"`
 }
 
 func (b Counter) TableName() string {
-	return "counters"
+	return "lms.counters"
 }
 
 type EntityName string
@@ -37,21 +38,20 @@ func IncrementCounterAndGetValue(
 	tx *gorm.DB,
 	req IncrementCounterAndGetValueReq,
 ) (uint64, error) {
+	var counter Counter
 
-	var val uint64
-
-	err := tx.WithContext(ctx).
-		Raw(`
-			UPDATE counters
-			SET value = value + 1
-			WHERE name = ?
-			RETURNING value
-		`, req.EntityName).
-		Scan(&val).Error
-
-	if err != nil {
+	if err := tx.
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("name = ?", req.EntityName).
+		First(&counter).Error; err != nil {
 		return 0, err
 	}
 
-	return val, nil
+	counter.Value++
+
+	if err := tx.Save(&counter).Error; err != nil {
+		return 0, err
+	}
+
+	return counter.Value, nil
 }

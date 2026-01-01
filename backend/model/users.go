@@ -8,19 +8,19 @@ import (
 )
 
 type User struct {
-	Id          string    `gorm:"id,primaryKey"`
-	Name        string    `gorm:"name"`
-	UserName    string    `gorm:"username"`
-	Role        string    `gorm:"role"`
-	MemberId    string    `gorm:"member_id"`
-	Email       string    `gorm:"email"`
-	PhoneNumber string    `gorm:"phone_number"`
-	UpdatedAt   time.Time `gorm:"updated_at"`
-	CreatedAt   time.Time `gorm:"created_at"`
+	Id          string    `gorm:"column:id;primaryKey"`
+	Name        string    `gorm:"column:name"`
+	UserName    string    `gorm:"column:username"`
+	Role        string    `gorm:"column:role"`
+	MemberId    string    `gorm:"column:member_id"`
+	Email       string    `gorm:"column:email"`
+	PhoneNumber string    `gorm:"column:phone_number"`
+	UpdatedAt   time.Time `gorm:"column:updated_at"`
+	CreatedAt   time.Time `gorm:"column:created_at"`
 }
 
 func (b User) TableName() string {
-	return "users"
+	return "lms.users"
 }
 
 func GetUserById(tx *gorm.DB, id string) (User, error) {
@@ -107,11 +107,18 @@ type CreateUserReq struct {
 
 func CreateUser(tx *gorm.DB, req CreateUserReq) (User, error) {
 	user := User{
-		Id:        req.Id,
-		UpdatedAt: utils.GetCurrentTimeInIst(),
+		Id:          req.Id,
+		UpdatedAt:   utils.GetCurrentTimeInIst(),
+		CreatedAt:   utils.GetCurrentTimeInIst(),
+		Name:        req.Name,
+		UserName:    req.UserName,
+		MemberId:    req.MemberId,
+		Email:       req.Email,
+		PhoneNumber: req.PhoneNumber,
+		Role:        req.Role,
 	}
 
-	queryResp := tx.Table(User{}.TableName()).Create(&user)
+	queryResp := tx.Create(&user)
 	if queryResp.Error != nil {
 		return User{}, queryResp.Error
 	}

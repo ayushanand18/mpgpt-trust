@@ -68,6 +68,10 @@ func (s *service) UpdateUser(ctx context.Context, req UpdateUserReq) (resp Updat
 // CreateUser
 // 1. create a new user entry in users table
 func (s *service) CreateUser(ctx context.Context, req CreateUserReq) (resp CreateUserResp, err error) {
+	if req.Id == "" {
+		return resp, fmt.Errorf("user id cannot be empty")
+	}
+
 	tx := environment.GetDbConn(ctx).Begin()
 	defer func() {
 		if err != nil {
@@ -79,8 +83,8 @@ func (s *service) CreateUser(ctx context.Context, req CreateUserReq) (resp Creat
 
 	// first get user by id to check if user already exists
 	var newUser model.User
-	newUser, err = model.GetUserById(tx, req.Id)
-	if err == nil {
+	newUser, userErr := model.GetUserById(tx, req.Id)
+	if userErr == nil {
 		// user already exists
 		resp.Id = newUser.Id
 		resp.MemberId = newUser.MemberId

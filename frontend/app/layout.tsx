@@ -15,6 +15,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Munshi Premchand Gramin Pustakalay",
   description: "Digital Library Management System - under construction. Launching soon.",
+  applicationName: "Munshi Premchand Gramin Pustakalay",
+  icons: 'library_logo_main.jpg'
 };
 
 export default function RootLayout({
