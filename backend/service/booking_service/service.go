@@ -2,6 +2,7 @@ package bookingservice
 
 import (
 	"context"
+	"math"
 
 	"github.com/ayushanand18/mpgpt-trust/backend/environment"
 	"github.com/ayushanand18/mpgpt-trust/backend/model"
@@ -50,11 +51,12 @@ func (s *service) CreateBooking(ctx context.Context, req CreateBookingReq) (resp
 
 	resp.Booking = booking
 
-	// subtract 1 credit also
+	// subtract credits accordingly also
+	numberOfSlots := math.Ceil(req.EndTime.Sub(req.StartTime).Hours() / 24) // assuming 1 credit per day
 	err = model.UpdateCredits(tx, model.UpdateCreditsReq{
 		EntityId:    req.MemberId,
 		EntityType:  "member",
-		ValueChange: -1,
+		ValueChange: -numberOfSlots,
 		UserId:      req.MemberId,
 		UserType:    "member",
 	})
