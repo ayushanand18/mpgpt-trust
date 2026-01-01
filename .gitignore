@@ -1,0 +1,5 @@
+.allowedsigners
+*.env
+
+.vscode/
+.idea/
