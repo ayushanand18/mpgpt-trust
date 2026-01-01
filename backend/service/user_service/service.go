@@ -91,7 +91,7 @@ func (s *service) CreateUser(ctx context.Context, req CreateUserReq) (resp Creat
 		return resp, nil
 	}
 
-	counterVal, err := model.IncrementCounterAndGetValue(ctx, environment.GetDbConn(ctx), model.IncrementCounterAndGetValueReq{
+	counterVal, err := model.IncrementCounterAndGetValue(ctx, tx, model.IncrementCounterAndGetValueReq{
 		EntityName: model.StudentMemberId,
 	})
 	if err != nil {

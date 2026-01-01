@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Counter struct {
@@ -37,21 +38,20 @@ func IncrementCounterAndGetValue(
 	tx *gorm.DB,
 	req IncrementCounterAndGetValueReq,
 ) (uint64, error) {
+	var counter Counter
 
-	var val uint64
-
-	err := tx.WithContext(ctx).
-		Raw(`
-			UPDATE "lms"."counters"
-			SET value = value + 1
-			WHERE name = ?
-			RETURNING value
-		`, req.EntityName).
-		Scan(&val).Error
-
-	if err != nil {
+	if err := tx.
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("name = ?", req.EntityName).
+		First(&counter).Error; err != nil {
 		return 0, err
 	}
 
-	return val, nil
+	counter.Value++
+
+	if err := tx.Save(&counter).Error; err != nil {
+		return 0, err
+	}
+
+	return counter.Value, nil
 }
