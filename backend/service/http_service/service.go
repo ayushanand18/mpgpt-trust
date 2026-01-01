@@ -3,6 +3,7 @@ package httpservice
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -40,7 +41,8 @@ func RegisterServer(ctx context.Context) (err error) {
 			Id: id,
 		}
 		return request, nil
-	}).WithEncoder(GenericEncoder())
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder())
 
 	// will create user <- behind superuser auth
 	server.POST("/user").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -53,7 +55,8 @@ func RegisterServer(ctx context.Context) (err error) {
 			return nil, err
 		}
 		return req, nil
-	}).WithEncoder(GenericEncoder())
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder())
 
 	// will update some part of user <- admin/superuser/user auth
 	server.PATCH("/user/{id}").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -68,7 +71,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		}
 		req.Id = paramsMap["id"]
 		return req, nil
-	}).WithEncoder(GenericEncoder())
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder())
 
 	// fetch user information from some params <- admin/superuser auth
 	server.POST("/users").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -81,7 +85,8 @@ func RegisterServer(ctx context.Context) (err error) {
 			return nil, err
 		}
 		return req, nil
-	}).WithEncoder(GenericEncoder())
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder())
 
 	// BookingService
 	// add a new booking for a user <- admin/superuser/user auth
@@ -95,7 +100,8 @@ func RegisterServer(ctx context.Context) (err error) {
 			return nil, err
 		}
 		return req, nil
-	}).WithEncoder(GenericEncoder())
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder())
 
 	// view bookings on a library
 	server.POST("/bookings").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -108,7 +114,8 @@ func RegisterServer(ctx context.Context) (err error) {
 			return nil, err
 		}
 		return req, nil
-	}).WithEncoder(GenericEncoder())
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder())
 
 	// AdminService
 	// add credits to user <- admin/superuser auth
@@ -124,7 +131,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		paramMap := ctx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
 		req.Id = paramMap["id"]
 		return req, nil
-	}).WithEncoder(GenericEncoder())
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder())
 
 	// add a new library <- superuser auth
 	server.POST("/library").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -137,7 +145,8 @@ func RegisterServer(ctx context.Context) (err error) {
 			return nil, err
 		}
 		return req, nil
-	}).WithEncoder(GenericEncoder())
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder())
 
 	// get all libraries info <- public
 	server.GET("/libraries").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -150,7 +159,8 @@ func RegisterServer(ctx context.Context) (err error) {
 			return nil, err
 		}
 		return req, nil
-	}).WithEncoder(GenericEncoder())
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder())
 
 	// delete a library <- superuser auth
 	server.DELETE("/library").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -163,7 +173,8 @@ func RegisterServer(ctx context.Context) (err error) {
 			return nil, err
 		}
 		return req, nil
-	}).WithEncoder(GenericEncoder())
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder())
 
 	// add admin - library mapping <- superuser auth
 	server.POST("/user/{id}/library").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -178,7 +189,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		paramMap := ctx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
 		req.Id = paramMap["id"]
 		return req, nil
-	}).WithEncoder(GenericEncoder())
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder())
 
 	if err := server.ListenAndServe(ctx); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
@@ -187,12 +199,25 @@ func RegisterServer(ctx context.Context) (err error) {
 }
 
 func GenericEncoder() httptypes.HttpEncoder {
-	return func(ctx context.Context, response interface{}) (headers map[string][]string, body []byte, err error) {
+	return func(ctx context.Context, response interface{}, reqErr error) (headers map[string][]string, body []byte, err error) {
 		respBody := GenericResponse{
 			Error: Error{
 				Message: "",
 			},
 			Data: response,
+		}
+		body, err = json.Marshal(respBody)
+		return headers, body, err
+	}
+}
+
+func ErrorEncoder() httptypes.HttpEncoder {
+	return func(ctx context.Context, response interface{}, reqErr error) (headers map[string][]string, body []byte, err error) {
+		respBody := GenericResponse{
+			Error: Error{
+				Message: fmt.Sprintf("%v", reqErr),
+			},
+			Data: nil,
 		}
 		body, err = json.Marshal(respBody)
 		return headers, body, err

@@ -68,6 +68,10 @@ func (s *service) UpdateUser(ctx context.Context, req UpdateUserReq) (resp Updat
 // CreateUser
 // 1. create a new user entry in users table
 func (s *service) CreateUser(ctx context.Context, req CreateUserReq) (resp CreateUserResp, err error) {
+	if req.Id == "" {
+		return resp, fmt.Errorf("user id cannot be empty")
+	}
+
 	tx := environment.GetDbConn(ctx).Begin()
 	defer func() {
 		if err != nil {
@@ -87,7 +91,7 @@ func (s *service) CreateUser(ctx context.Context, req CreateUserReq) (resp Creat
 		return resp, nil
 	}
 
-	counterVal, err := model.IncrementCounterAndGetValue(ctx, tx, model.IncrementCounterAndGetValueReq{
+	counterVal, err := model.IncrementCounterAndGetValue(ctx, environment.GetDbConn(ctx), model.IncrementCounterAndGetValueReq{
 		EntityName: model.StudentMemberId,
 	})
 	if err != nil {

@@ -26,3 +26,7 @@ CREATE INDEX idx_credits_entity ON lms.credits(entity_id, entity_type);
 CREATE INDEX idx_users_member_id ON lms.users (member_id);
 CREATE INDEX idx_users_email ON lms.users (email);
 CREATE INDEX idx_users_phone_number ON lms.users (phone_number);
+
+ALTER TABLE lms.users
+ADD CONSTRAINT users_id_not_empty
+CHECK (length(trim(id)) > 0);
