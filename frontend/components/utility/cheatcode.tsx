@@ -13,6 +13,7 @@ export default function CheatCodeListener() {
   const cheats: CheatMap = {
     admin: () => router.push("/admin"),
     user: () => router.push("/user"),
+    auth: () => router.push("/auth"),
   };
 
   useEffect(() => {
