@@ -50,13 +50,34 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (user && request.nextUrl.pathname === '/auth') {
-    // already logged in, redirect away from login page
-    // choose which view to redirect to based on user role
-    const url = request.nextUrl.clone()
-    url.pathname = '/user'
-    return NextResponse.redirect(url)
+  if (user && (request.nextUrl.pathname === '/auth')) {
+    try {
+      const sessionData = await supabase.auth.getSession()
+      const { session } = sessionData.data
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${user.sub}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        }
+      )
+
+      if (res.ok) {
+        const userData = await res.json()
+
+        const url = request.nextUrl.clone()
+        url.pathname = userData.data?.Role === 'admin' ? '/admin' : '/user'
+        return NextResponse.redirect(url)
+      }
+    } catch (err) {
+      return NextResponse.redirect('/')
+    }
   }
+
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
   // creating a new response object with NextResponse.next() make sure to:

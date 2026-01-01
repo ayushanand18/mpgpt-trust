@@ -1,12 +1,9 @@
 export interface User {
-  id: string
-  memberId: string
-  name: string
-  email: string
-  phoneNumber: string
-  credits: number
-  joinedDate: string
-  status: "active" | "inactive"
+  Id: string
+  MemberId: string
+  Name: string
+  Email: string
+  PhoneNumber: string
 }
 
 export interface Library {
@@ -29,3 +26,15 @@ export interface Booking {
   endTime: string
   status: "active" | "completed" | "cancelled"
 }
+
+export interface UserData {
+  id: string
+  email: string
+  phone: string
+  name: string
+  memberId: string
+  address: string
+  city: string
+  zipCode: string
+}
+

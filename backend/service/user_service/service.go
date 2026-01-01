@@ -7,6 +7,7 @@ import (
 	"github.com/ayushanand18/mpgpt-trust/backend/environment"
 	"github.com/ayushanand18/mpgpt-trust/backend/model"
 	"github.com/ayushanand18/mpgpt-trust/backend/utils"
+	"gorm.io/gorm"
 )
 
 type service struct{}
@@ -19,7 +20,9 @@ func NewUserService(ctx context.Context) *service {
 // 1. fetch user details based on user id
 func (s *service) GetUser(ctx context.Context, req GetUserReq) (resp GetUserResp, err error) {
 	resp.User, err = model.GetUserById(environment.GetDbConn(ctx), req.Id)
-	if err != nil {
+	if err != nil && err == gorm.ErrRecordNotFound {
+		return resp, nil
+	} else if err != nil {
 		return resp, err
 	}
 

@@ -47,6 +47,10 @@ func RegisterServer(ctx context.Context) (err error) {
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
 
+	server.OPTIONS("/user/{id}").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
+		return "Hello", nil
+	})
+
 	// will create user <- behind superuser/user auth
 	server.POST("/user").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(userservice.CreateUserReq)
@@ -63,6 +67,10 @@ func RegisterServer(ctx context.Context) (err error) {
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
+
+	server.OPTIONS("/user").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
+		return "Hello", nil
+	})
 
 	// will update some part of user <- admin/superuser/user auth
 	server.PATCH("/user/{id}").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
