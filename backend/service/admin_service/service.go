@@ -2,7 +2,6 @@ package adminservice
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/ayushanand18/mpgpt-trust/backend/environment"
@@ -60,7 +59,7 @@ func (s *service) CreateLibrary(ctx context.Context, req CreateLibraryReq) (resp
 	}
 	if len(existingLibs) > 0 {
 		// handle the case where a library with the same name already exists
-		return resp, errors.New(fmt.Sprintf("Library with name %s already exists", req.Name))
+		return resp, fmt.Errorf("Library with name %s already exists", req.Name)
 	}
 
 	resp.Library, err = model.CreateLibrary(tx, model.CreateLibraryReq{
