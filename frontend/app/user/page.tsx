@@ -13,10 +13,27 @@ export default function UserPanelPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-semibold text-foreground">Library Management Portal</h1>
-          <p className="text-sm text-muted-foreground">Welcome back, manage your library account</p>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">
+              Library Management Portal
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Welcome back, manage your library account
+            </p>
+          </div>
+
+          <button
+            onClick={async () => {
+              await fetch('/auth/logout', { method: 'GET' })
+              window.location.href = '/'
+            }}
+            className="text-sm font-medium text-red-600 hover:text-red-700 border border-red-600 px-4 py-2 rounded cursor-pointer"
+          >
+            Logout
+          </button>
         </div>
+
       </header>
 
       <main className="container mx-auto px-4 py-8">

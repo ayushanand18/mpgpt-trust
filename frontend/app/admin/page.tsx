@@ -97,10 +97,27 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-semibold">Library Management System</h1>
-          <p className="text-sm text-muted-foreground mt-1">Admin Dashboard</p>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold">
+              Library Management System
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Admin Dashboard
+            </p>
+          </div>
+
+          <button
+            onClick={async () => {
+              await fetch('/auth/logout', { method: 'GET' })
+              window.location.href = '/'
+            }}
+            className="text-sm font-medium text-red-600 hover:text-red-700 border border-red-600 px-4 py-2 rounded cursor-pointer"
+          >
+            Logout
+          </button>
         </div>
+
       </header>
 
       <main className="container mx-auto px-4 py-6">

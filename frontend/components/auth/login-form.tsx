@@ -9,16 +9,31 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookOpen } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email")
+  const supabase = createClient()
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
     
-    // Implement Google sign-in logic here
-    setTimeout(() => setIsLoading(false), 2000)
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
+      },
+    })
+
+    if (error) {
+      console.error("Error during Google sign-in:", error.message)
+      setIsLoading(false)
+      return
+    }
+
+    // after 10seconds, allow user to attempt login again
+    setTimeout(() => setIsLoading(false), 10000)
   }
 
   const handleEmailPhoneSignIn = async (e: React.FormEvent) => {
