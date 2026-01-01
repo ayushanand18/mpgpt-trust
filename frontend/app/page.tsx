@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import Image from "next/image";
-import Countdown from "@/components/countdown";
+import Countdown from "@/components/admin/countdown";
+import CheatCodeListener from "@/components/utility/cheatcode";
 
 export default function Home() {
   return (
@@ -48,6 +49,8 @@ export default function Home() {
           >
             In <Countdown launchAt="2026-01-04T00:00:00Z" />
           </a>
+
+          <CheatCodeListener />
         </div>
       </main>
     </div>
