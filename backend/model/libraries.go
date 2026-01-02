@@ -74,3 +74,43 @@ func DeleteLibrary(tx *gorm.DB, req DeleteLibraryReq) error {
 
 	return nil
 }
+
+type UpdateLibraryReq struct {
+	Id        uint32
+	Name      *string
+	Latitude  *float64
+	Longitude *float64
+	Address   *string
+	Status    *string
+}
+
+func UpdateLibrary(tx *gorm.DB, req UpdateLibraryReq) error {
+	updateMap := make(map[string]interface{})
+
+	if req.Name != nil {
+		updateMap["name"] = req.Name
+	}
+
+	if req.Latitude != nil {
+		updateMap["latitude"] = req.Latitude
+	}
+
+	if req.Longitude != nil {
+		updateMap["longitude"] = req.Longitude
+	}
+
+	if req.Address != nil {
+		updateMap["address"] = req.Address
+	}
+
+	if req.Status != nil {
+		updateMap["status"] = req.Status
+	}
+
+	queryResp := tx.Table(Library{}.TableName()).Where("id = ?", req.Id).Updates(updateMap)
+	if queryResp.Error != nil {
+		return queryResp.Error
+	}
+
+	return nil
+}

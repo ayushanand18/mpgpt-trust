@@ -20,6 +20,14 @@ func NewBookingService(ctx context.Context) *service {
 // GetBookings
 // 1. fetch bookings based on MemberIds and LibraryIds
 func (s *service) GetBookings(ctx context.Context, req GetBookingsReq) (resp GetBookingsResp, err error) {
+	userId := utils.GetUserIdFromContext(ctx)
+	if userId == "" {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+	if utils.GetUserRoleFromContext(ctx) == constants.UserTypeMember {
+		req.MemberIds = []string{utils.GetMemberIdFromContext(ctx)}
+	}
+
 	resp.Bookings, err = model.GetBookings(environment.GetDbConn(ctx), model.GetBookingsReq{
 		MemberIds:  req.MemberIds,
 		LibraryIds: req.LibraryIds,
@@ -61,6 +69,11 @@ func (s *service) GetBookings(ctx context.Context, req GetBookingsReq) (resp Get
 // CreateBooking
 // 1. create a booking entry in bookings table
 func (s *service) CreateBooking(ctx context.Context, req CreateBookingReq) (resp CreateBookingResp, err error) {
+	userId := utils.GetUserIdFromContext(ctx)
+	if userId == "" {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+
 	tx := environment.GetDbConn(ctx).Begin()
 	defer func() {
 		if err != nil {
@@ -69,6 +82,11 @@ func (s *service) CreateBooking(ctx context.Context, req CreateBookingReq) (resp
 			tx.Commit()
 		}
 	}()
+
+	if req.MemberId == "" {
+		// fetch from context
+		req.MemberId = utils.GetMemberIdFromContext(ctx)
+	}
 
 	// subtract credits accordingly also
 	numberOfSlots := math.Ceil(req.EndTime.Sub(req.StartTime).Hours() / 24) // assuming 1 credit per day

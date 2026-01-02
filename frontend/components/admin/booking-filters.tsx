@@ -20,7 +20,7 @@ export function BookingFilters({ libraries, onFilter }: BookingFiltersProps) {
 
   const handleFilter = () => {
     if (selectedLibrary && startDate && endDate) {
-      onFilter(Number(selectedLibrary), startDate, endDate)
+      onFilter(parseInt(selectedLibrary), startDate, endDate)
     }
   }
 
@@ -34,7 +34,7 @@ export function BookingFilters({ libraries, onFilter }: BookingFiltersProps) {
           </SelectTrigger>
           <SelectContent>
             {libraries.map((library) => (
-              <SelectItem key={library.id} value={library.id.toString()}>
+              <SelectItem key={library.id} value={`${library.id}`}>
                 {library.name}
               </SelectItem>
             ))}
@@ -50,7 +50,7 @@ export function BookingFilters({ libraries, onFilter }: BookingFiltersProps) {
         <Input id="endDate" type="datetime-local" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
       </div>
       <div className="flex items-end">
-        <Button onClick={handleFilter} className="w-full">
+        <Button onClick={handleFilter} className="w-full" disabled={!selectedLibrary || !startDate || !endDate}>
           <Calendar className="h-4 w-4 mr-2" />
           Filter Bookings
         </Button>

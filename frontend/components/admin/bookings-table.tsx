@@ -61,7 +61,7 @@ export function BookingsTable({ bookings, libraryName }: BookingsTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Student Name</TableHead>
+              <TableHead>Member Id</TableHead>
               <TableHead>Start Time</TableHead>
               <TableHead>End Time</TableHead>
               <TableHead>Duration</TableHead>
@@ -71,7 +71,7 @@ export function BookingsTable({ bookings, libraryName }: BookingsTableProps) {
           <TableBody>
             {bookings.map((booking) => (
               <TableRow key={booking.id}>
-                <TableCell className="font-medium">{booking.userName}</TableCell>
+                <TableCell className="font-medium">{booking.memberId}</TableCell>
                 <TableCell>{formatDateTime(booking.startTime)}</TableCell>
                 <TableCell>{formatDateTime(booking.endTime)}</TableCell>
                 <TableCell>{calculateDuration(booking.startTime, booking.endTime)}</TableCell>

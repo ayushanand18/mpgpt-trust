@@ -6,6 +6,7 @@ export interface User {
   PhoneNumber: string
   CreatedAt: string
   Credits: number
+  Role: string
 }
 
 export interface Library {
@@ -14,11 +15,12 @@ export interface Library {
   address: string
   latitude: number
   longitude: number
+  admins: any[]
 }
 
 export interface Booking {
   id: string
-  userId: string
+  memberId: string
   libraryId: number
   userName: string
   startTime: string

@@ -1,14 +1,29 @@
 import { createClient } from "@/lib/supabase/client"
 const supabase = createClient()
 
-export async function fetchBookings() {
+export async function fetchBookings(libraryId?: number, startDate?: string, endDate?: string) {
     const { data: { session }, error } = await supabase.auth.getSession()
     if (error) {
         throw new Error('No active session found')
     }
 
-    const start = new Date(new Date().setUTCMonth(new Date().getUTCMonth() - 3)).toISOString()
-    const end = new Date(new Date().setUTCMonth(new Date().getUTCMonth() + 3)).toISOString()
+    let req: any = {}
+    if (!startDate || !endDate) {
+        const start = new Date(new Date().setUTCMonth(new Date().getUTCMonth() - 3)).toISOString()
+        const end = new Date(new Date().setUTCMonth(new Date().getUTCMonth() + 3)).toISOString()
+        req = {
+            StartTime: start,
+            EndTime: end,
+        }
+    } else {
+        const start = new Date(startDate).toISOString()
+        const end = new Date(endDate).toISOString()
+        req = {
+            LibraryId: libraryId,
+            StartTime: start,
+            EndTime: end,
+        }
+    }
 
     const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/bookings`,
@@ -18,10 +33,7 @@ export async function fetchBookings() {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${session?.access_token}`,
             },
-            body: JSON.stringify({
-                StartTime: start,
-                EndTime: end,
-            })
+            body: JSON.stringify(req)
         }
     )
 

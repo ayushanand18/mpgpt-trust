@@ -14,13 +14,14 @@ import { BookingsTable } from "@/components/admin/bookings-table"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, LibraryIcon, Calendar } from "lucide-react"
-import { searchUsers } from "@/actions/users"
-import { fetchLibraries } from "@/actions/libraries"
+import { editUser, searchUsers } from "@/actions/users"
+import { editLibrary, fetchLibraries } from "@/actions/libraries"
+import { fetchBookings } from "@/actions/bookings"
+import { addCredits } from "@/actions/credits"
 
 export default function Home() {
   const [users, setUsers] = useState<User[]>([])
   const [libraries, setLibraries] = useState<Library[]>([])
-  const [bookings] = useState<Booking[]>([])
   const [searchResults, setSearchResults] = useState<User[]>([])
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [creditsUser, setCreditsUser] = useState<User | null>(null)
@@ -41,6 +42,8 @@ export default function Home() {
         MemberId: u.MemberId,
         UserName: u.UserName,
         CreatedAt: u.CreatedAt,
+        Role: u.Role,
+        Credits: u.CurrentCredits,
       })) || [])
       setHasSearched(true)
     }).catch((error: Error) => {
@@ -51,8 +54,13 @@ export default function Home() {
   }
 
   const handleEditUser = (updatedUser: User) => {
-    setUsers(users.map((user) => (user.Id === updatedUser.Id ? updatedUser : user)))
-    setSearchResults(searchResults.map((user) => (user.Id === updatedUser.Id ? updatedUser : user)))
+    console.log("Editing user:", updatedUser)
+    editUser(updatedUser).then(() => {
+      setUsers(users.map((user) => (user.Id === updatedUser.Id ? updatedUser : user)))
+      setSearchResults(searchResults.map((user) => (user.Id === updatedUser.Id ? updatedUser : user)))
+    }).catch((error: Error) => {
+      console.error("Error editing user:", error)
+    })
   }
 
   const handleDeleteUser = (userId: string) => {
@@ -62,58 +70,66 @@ export default function Home() {
     }
   }
 
-  const handleAddCredits = (amount: number) => {
+  const handleAddCredits = (amount: number, utrNumber: string, comment: string) => {
     if (creditsUser) {
-      const updatedUser = {
-        ...creditsUser,
-        Credits: creditsUser.Credits + amount,
-      }
-      handleEditUser(updatedUser)
+      
+      addCredits(creditsUser, amount, utrNumber, comment).then(() => {
+      }).catch((error: Error) => {
+        console.error("Error adding credits:", error)
+      })
     }
   }
 
   const handleEditLibrary = (updatedLibrary: Library) => {
-    setLibraries(libraries.map((lib) => (lib.id === updatedLibrary.id ? updatedLibrary : lib)))
+    editLibrary(updatedLibrary).then(() => {
+      setLibraries(libraries.map((lib) => (lib.id == updatedLibrary.id ? updatedLibrary : lib)))
+    }).catch((error: Error) => {
+      console.error("Error editing library:", error)
+    })
   }
 
   const handleFilterBookings = (libraryId: number, startDate: string, endDate: string) => {
     const library = libraries.find((lib) => lib.id === libraryId)
     if (!library) return
 
-    const start = new Date(startDate)
-    const end = new Date(endDate)
+    fetchBookings(libraryId, startDate, endDate).then((data) => {
+      setFilteredBookings(data.Bookings?.map((b: any) => ({
+        id: b.Id,
+        userId: b.UserId,
+        memberId: b.MemberId,
+        libraryId: b.LibraryId,
+        userName: b.UserName,
+        startTime: b.StartTime,
+        endTime: b.EndTime,
+        status: b.Status,
+      })) || [])
 
-    const filtered = bookings.filter((booking) => {
-      if (booking.libraryId !== libraryId) return false
-      const bookingStart = new Date(booking.startTime)
-      const bookingEnd = new Date(booking.endTime)
-      return (
-        booking.status === "active" &&
-        ((bookingStart >= start && bookingStart <= end) || (bookingEnd >= start && bookingEnd <= end))
-      )
+      setSelectedLibraryName(library.name)
+      setHasFilteredBookings(true)
+    }).catch((error: Error) => {
+      console.error("Error fetching bookings:", error)
+      setFilteredBookings([])
+      setHasFilteredBookings(true)
     })
-
-    setFilteredBookings(filtered)
-    setSelectedLibraryName(library.name)
-    setHasFilteredBookings(true)
   }
 
   useEffect(() => {
-    fetchLibraries("").then((libs) => {
-      console.log("Fetched libraries:", libs)
+    fetchLibraries("", true).then((libs) => {
+
       setLibraries(libs?.Libraries?.map((lib: any) => ({
         id: lib.Id,
         name: lib.Name,
         address: lib.Address,
         latitude: lib.Latitude,
         longitude: lib.Longitude,
+        admins: lib.Admins || [],
       })) || [])
     }).catch((error: Error) => {
       console.error("Error fetching libraries:", error)
       setLibraries([])
     })
   }, [])
-    
+
 
   return (
     <div className="min-h-screen bg-background">

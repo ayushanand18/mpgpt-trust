@@ -7,4 +7,5 @@ type Service interface {
 	CreateLibrary(context.Context, CreateLibraryReq) (CreateLibraryResp, error)
 	GetLibraries(context.Context, GetLibrariesReq) (GetLibrariesResp, error)
 	AddAdminLibMapping(context.Context, AddAdminLibMappingReq) (AddAdminLibMappingResp, error)
+	UpdateLibrary(context.Context, UpdateLibraryReq) (UpdateLibraryResp, error)
 }

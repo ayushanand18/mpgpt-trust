@@ -3,7 +3,7 @@ module github.com/ayushanand18/mpgpt-trust/backend
 go 1.25.4
 
 require (
-	github.com/ayushanand18/crazyhttp v1.1.1-0.20260102095603-6470c72dbc53
+	github.com/ayushanand18/crazyhttp v1.1.1-0.20260102154103-4d39905ac60d
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1
