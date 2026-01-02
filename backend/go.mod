@@ -1,6 +1,6 @@
 module github.com/ayushanand18/mpgpt-trust/backend
 
-go 1.25.4
+go 1.25.0
 
 require (
 	github.com/ayushanand18/crazyhttp v1.1.1-0.20260102154103-4d39905ac60d
