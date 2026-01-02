@@ -46,3 +46,12 @@ type CreateUserResp struct {
 	Id       string
 	MemberId string
 }
+
+type GetUserCreditsReq struct {
+	MemberId string
+}
+
+type GetUserCreditsResp struct {
+	CurrentCredits float64
+	History        []model.CreditsHistory
+}

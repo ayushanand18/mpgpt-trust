@@ -66,3 +66,10 @@ func GetCredits(tx *gorm.DB, req GetCreditsReq) (Credits, error) {
 
 	return credits, nil
 }
+
+func CreateCredits(tx *gorm.DB, req Credits) error {
+	if err := tx.Table(Credits{}.TableName()).Create(&req).Error; err != nil {
+		return err
+	}
+	return nil
+}

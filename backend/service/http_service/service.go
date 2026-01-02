@@ -10,6 +10,8 @@ import (
 	httpconstants "github.com/ayushanand18/crazyhttp/pkg/constants"
 	crazyhttp "github.com/ayushanand18/crazyhttp/pkg/server"
 	httptypes "github.com/ayushanand18/crazyhttp/pkg/types"
+	"github.com/ayushanand18/mpgpt-trust/backend/environment"
+	"github.com/ayushanand18/mpgpt-trust/backend/model"
 	adminservice "github.com/ayushanand18/mpgpt-trust/backend/service/admin_service"
 	bookingservice "github.com/ayushanand18/mpgpt-trust/backend/service/booking_service"
 	userservice "github.com/ayushanand18/mpgpt-trust/backend/service/user_service"
@@ -144,6 +146,23 @@ func RegisterServer(ctx context.Context) (err error) {
 		WithBeforeServe(AuthMiddleware())
 
 	routes = append(routes, "/bookings")
+
+	server.GET("/user/{id}/credits").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
+		request := i.(userservice.GetUserCreditsReq)
+		return userService.GetUserCredits(ctx, request)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+		populateUserIdAndRoleFromHttpRequest(ctx, r)
+		req := userservice.GetUserCreditsReq{}
+		paramMap := ctx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
+		user, err := model.GetUserById(environment.GetDbConn(ctx), paramMap["id"])
+		if err != nil {
+			return nil, err
+		}
+		req.MemberId = user.MemberId
+		return req, nil
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder()).
+		WithBeforeServe(AuthMiddleware())
 
 	// AdminService
 	// add credits to user <- admin/superuser auth

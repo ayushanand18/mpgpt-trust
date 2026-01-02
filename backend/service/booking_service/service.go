@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/ayushanand18/mpgpt-trust/backend/constants"
 	"github.com/ayushanand18/mpgpt-trust/backend/environment"
 	"github.com/ayushanand18/mpgpt-trust/backend/model"
 	"github.com/ayushanand18/mpgpt-trust/backend/utils"
@@ -75,7 +76,7 @@ func (s *service) CreateBooking(ctx context.Context, req CreateBookingReq) (resp
 	// get current credits
 	credits, err := model.GetCredits(environment.GetDbConn(ctx), model.GetCreditsReq{
 		EntityId:   req.MemberId,
-		EntityType: "member",
+		EntityType: constants.UserTypeMember,
 	})
 	if err != nil {
 		return resp, err
@@ -100,10 +101,10 @@ func (s *service) CreateBooking(ctx context.Context, req CreateBookingReq) (resp
 
 	err = model.UpdateCredits(tx, model.UpdateCreditsReq{
 		EntityId:    req.MemberId,
-		EntityType:  "member",
+		EntityType:  constants.UserTypeMember,
 		ValueChange: -numberOfSlots,
 		UserId:      req.MemberId,
-		UserType:    "member",
+		UserType:    constants.UserTypeMember,
 	})
 	if err != nil {
 		return resp, err
@@ -112,7 +113,7 @@ func (s *service) CreateBooking(ctx context.Context, req CreateBookingReq) (resp
 	// create credits history
 	err = model.CreateCreditsHistory(tx, model.CreditsHistory{
 		EntityId:   req.MemberId,
-		EntityType: "member",
+		EntityType: constants.UserTypeMember,
 		Value:      -numberOfSlots,
 		Comments:   fmt.Sprintf("Booking ID: %d, Reason: %s", booking.Id, req.Reason),
 		Reason:     "Booking deduction",

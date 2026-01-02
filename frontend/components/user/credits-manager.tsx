@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -15,6 +15,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { toast } from "@/hooks/use-toast"
+import { fetchCredits } from "@/actions/credits"
 
 type Transaction = {
   id: string
@@ -26,8 +28,8 @@ type Transaction = {
 }
 
 export function CreditsManager() {
-  const [currentBalance] = useState(250)
-  const [transactions] = useState<Transaction[]>([
+  const [currentBalance, setCurrentBalance] = useState(0)
+  const [transactions, setTransactions] = useState<Transaction[]>([
     {
       id: "1",
       type: "debit",
@@ -78,6 +80,26 @@ export function CreditsManager() {
     },
   ])
 
+  useEffect(() => {
+    fetchCredits().then((data) => {
+      setCurrentBalance(data.CurrentCredits)
+      setTransactions(data?.History?.map((item: any) => ({
+        id: item.ID,
+        type: item.Type,
+        amount: item.Amount,
+        description: item.Description,
+        date: item.Date,
+        balance: item.Balance,
+      })) || [])
+    }).catch((error: Error) => {
+      console.error("Error fetching credits:", error)
+      toast({
+        title: "Error fetching credits",
+        description: "There was an error fetching your credit transactions. Please try again later.",
+      })
+    })
+  }, [])
+
   const creditTransactions = transactions.filter((t) => t.type === "credit")
   const debitTransactions = transactions.filter((t) => t.type === "debit")
 
@@ -124,7 +146,7 @@ export function CreditsManager() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p className="text-5xl font-bold">${currentBalance}</p>
+            <p className="text-5xl font-bold">{currentBalance}</p>
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="secondary" className="w-full sm:w-auto">

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ayushanand18/mpgpt-trust/backend/constants"
 	"github.com/ayushanand18/mpgpt-trust/backend/environment"
 	"github.com/ayushanand18/mpgpt-trust/backend/model"
 	"github.com/ayushanand18/mpgpt-trust/backend/utils"
@@ -70,6 +71,7 @@ func (s *service) UpdateUser(ctx context.Context, req UpdateUserReq) (resp Updat
 
 // CreateUser
 // 1. create a new user entry in users table
+// 2. initialise credits for the user
 func (s *service) CreateUser(ctx context.Context, req CreateUserReq) (resp CreateUserResp, err error) {
 	if req.Id == "" {
 		return resp, fmt.Errorf("user id cannot be empty")
@@ -113,5 +115,33 @@ func (s *service) CreateUser(ctx context.Context, req CreateUserReq) (resp Creat
 	})
 	resp.Id = newUser.Id
 	resp.MemberId = newUser.MemberId
+
+	err = model.CreateCredits(tx, model.Credits{
+		EntityId:      newUser.MemberId,
+		EntityType:    constants.UserTypeMember,
+		Value:         0,
+		CreatedAt:     utils.GetCurrentTimeInIst(),
+		CreatedBy:     newUser.Id,
+		CreatedByType: constants.UserTypeMember,
+	})
+
+	return resp, err
+}
+
+func (s *service) GetUserCredits(ctx context.Context, req GetUserCreditsReq) (resp GetUserCreditsResp, err error) {
+	credits, err := model.GetCredits(environment.GetDbConn(ctx), model.GetCreditsReq{
+		EntityId:   req.MemberId,
+		EntityType: constants.UserTypeMember,
+	})
+
+	resp.CurrentCredits = credits.Value
+
+	transactions, err := model.GetCreditsHistory(environment.GetDbConn(ctx), model.GetCreditsHistoryReq{
+		EntityId:   req.MemberId,
+		EntityType: constants.UserTypeMember,
+	})
+
+	resp.History = transactions
+
 	return resp, err
 }

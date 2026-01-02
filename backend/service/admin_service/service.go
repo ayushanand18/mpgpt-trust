@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ayushanand18/mpgpt-trust/backend/constants"
 	"github.com/ayushanand18/mpgpt-trust/backend/environment"
 	"github.com/ayushanand18/mpgpt-trust/backend/model"
 )
@@ -29,7 +30,7 @@ func (s *service) UpdateCredits(ctx context.Context, req UpdateCreditsReq) (resp
 
 	err = model.UpdateCredits(tx, model.UpdateCreditsReq{
 		EntityId:    req.MemberId,
-		EntityType:  "member",
+		EntityType:  constants.UserTypeMember,
 		ValueChange: req.CreditsAmount,
 		UserId:      req.UserId,
 		UserType:    req.UserType,
@@ -38,7 +39,7 @@ func (s *service) UpdateCredits(ctx context.Context, req UpdateCreditsReq) (resp
 	// create credits history
 	err = model.CreateCreditsHistory(tx, model.CreditsHistory{
 		EntityId:   req.MemberId,
-		EntityType: "member",
+		EntityType: constants.UserTypeMember,
 		Value:      req.CreditsAmount,
 		Comments:   fmt.Sprintf("Credits Added, Reason: %s", req.Comment),
 		Reason:     "Credits addition",

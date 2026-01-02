@@ -21,3 +21,20 @@ func CreateCreditsHistory(tx *gorm.DB, req CreditsHistory) error {
 	}
 	return nil
 }
+
+type GetCreditsHistoryReq struct {
+	EntityId   string
+	EntityType string
+}
+
+func GetCreditsHistory(tx *gorm.DB, req GetCreditsHistoryReq) ([]CreditsHistory, error) {
+	var history []CreditsHistory
+	query := tx.Table(CreditsHistory{}.TableName()).
+		Where("entity_id = ? AND entity_type = ?", req.EntityId, req.EntityType)
+
+	if err := query.Find(&history).Error; err != nil {
+		return nil, err
+	}
+
+	return history, nil
+}
