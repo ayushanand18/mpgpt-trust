@@ -20,7 +20,6 @@ export function LibraryCard({ library, onEdit, onManageAdmins }: LibraryCardProp
           <CardTitle className="text-xl">{library.name}</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">ID: {library.id}</p>
         </div>
-        <Badge variant="secondary">{library.capacity} seats</Badge>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-3">
@@ -32,14 +31,6 @@ export function LibraryCard({ library, onEdit, onManageAdmins }: LibraryCardProp
                 {library.latitude.toFixed(4)}, {library.longitude.toFixed(4)}
               </p>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">{library.openingHours}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">{library.adminUsers.length} admin(s)</span>
           </div>
         </div>
         <div className="flex gap-2 pt-2">

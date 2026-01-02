@@ -25,8 +25,11 @@ type GetUsersResp struct {
 }
 
 type UpdateUserReq struct {
-	Id       string
-	MemberId *string // fields to update, are optional
+	Id          string
+	MemberId    *string // fields to update, are optional
+	PhoneNumber *string
+	Name        *string
+	Email       *string
 }
 
 type UpdateUserResp struct {
@@ -45,4 +48,13 @@ type CreateUserReq struct {
 type CreateUserResp struct {
 	Id       string
 	MemberId string
+}
+
+type GetUserCreditsReq struct {
+	MemberId string
+}
+
+type GetUserCreditsResp struct {
+	CurrentCredits float64
+	History        []model.CreditsHistory
 }

@@ -3,6 +3,7 @@ package httpservice
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 
@@ -11,13 +12,13 @@ import (
 	"github.com/ayushanand18/mpgpt-trust/backend/model"
 	"github.com/ayushanand18/mpgpt-trust/backend/utils"
 	"github.com/golang-jwt/jwt"
+	"gorm.io/gorm"
 )
 
 func populateUserIdAndRoleFromHttpRequest(
 	ctx context.Context,
 	r *http.Request,
 ) context.Context {
-
 	authStr := r.Header.Get("Authorization")
 	if authStr == "" || !strings.HasPrefix(authStr, "Bearer ") {
 		return ctx
@@ -31,7 +32,7 @@ func populateUserIdAndRoleFromHttpRequest(
 	}
 
 	user, err := model.GetUserById(environment.GetDbConn(ctx), userID)
-	if err != nil {
+	if err != nil && err == gorm.ErrRecordNotFound {
 		return ctx
 	}
 
@@ -64,6 +65,7 @@ func AuthMiddleware() httptypes.HttpRequestMiddleware {
 	return func(ctx context.Context, req interface{}) (context.Context, interface{}, error) {
 		// perform auth checks here
 		// e.g., validate tokens, check user roles, etc.
+		log.Printf("Incoming request: %+v\n", req)
 		return ctx, req, nil
 	}
 }

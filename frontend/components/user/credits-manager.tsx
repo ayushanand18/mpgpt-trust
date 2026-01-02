@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -15,81 +15,53 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { toast } from "@/hooks/use-toast"
+import { fetchCredits } from "@/actions/credits"
 
 type Transaction = {
   id: string
-  type: "credit" | "debit"
-  amount: number
+  value: number
   description: string
+  comments: string
   date: string
-  balance: number
 }
 
 export function CreditsManager() {
-  const [currentBalance] = useState(250)
-  const [transactions] = useState<Transaction[]>([
-    {
-      id: "1",
-      type: "debit",
-      amount: 15,
-      description: "Study room booking - Central Library",
-      date: "2026-01-01",
-      balance: 250,
-    },
-    {
-      id: "2",
-      type: "credit",
-      amount: 100,
-      description: "Payment received via QR code",
-      date: "2025-12-30",
-      balance: 265,
-    },
-    {
-      id: "3",
-      type: "debit",
-      amount: 10,
-      description: "Late return fee",
-      date: "2025-12-28",
-      balance: 165,
-    },
-    {
-      id: "4",
-      type: "debit",
-      amount: 20,
-      description: 'Book reservation - "Advanced Mathematics"',
-      date: "2025-12-25",
-      balance: 175,
-    },
-    {
-      id: "5",
-      type: "credit",
-      amount: 150,
-      description: "Payment received via QR code",
-      date: "2025-12-20",
-      balance: 195,
-    },
-    {
-      id: "6",
-      type: "debit",
-      amount: 5,
-      description: "Printing services",
-      date: "2025-12-18",
-      balance: 45,
-    },
+  const [currentBalance, setCurrentBalance] = useState(0)
+  const [transactions, setTransactions] = useState<Transaction[]>([
   ])
 
-  const creditTransactions = transactions.filter((t) => t.type === "credit")
-  const debitTransactions = transactions.filter((t) => t.type === "debit")
+  useEffect(() => {
+    fetchCredits().then((data) => {
+      setCurrentBalance(data.CurrentCredits)
+      setTransactions(data?.History?.map((item: any) => ({
+        id: item.Id,
+        value: item.Value,
+        description: item.Reason,
+        comments: item.Comments,
+        date: item.CreatedAt,
+      })) || [])
+    }).catch((error: Error) => {
+      console.error("Error fetching credits:", error)
+      toast({
+        title: "Error fetching credits",
+        description: "There was an error fetching your credit transactions. Please try again later.",
+      })
+    })
+  }, [])
+
+  const creditTransactions = transactions.filter((t) => t.value > 0)
+  const debitTransactions = transactions.filter((t) => t.value < 0)
 
   const TransactionCard = ({ transaction }: { transaction: Transaction }) => (
     <div className="flex items-center justify-between py-3">
       <div className="flex items-start gap-3">
         <div
           className={`p-2 rounded-lg ${
-            transaction.type === "credit" ? "bg-chart-4/10 text-chart-4" : "bg-destructive/10 text-destructive"
+            transaction.value > 0 ? "bg-chart-4/10 text-chart-4" : "bg-destructive/10 text-destructive"
           }`}
         >
-          {transaction.type === "credit" ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+          {transaction.value > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
         </div>
         <div>
           <p className="font-medium text-sm">{transaction.description}</p>
@@ -103,10 +75,9 @@ export function CreditsManager() {
         </div>
       </div>
       <div className="text-right">
-        <p className={`font-semibold ${transaction.type === "credit" ? "text-chart-4" : "text-destructive"}`}>
-          {transaction.type === "credit" ? "+" : "-"}${transaction.amount}
+        <p className={`font-semibold ${transaction.value > 0 ? "text-chart-4" : "text-destructive"}`}>
+          {transaction.value > 0 ? "+" : "-"}${Math.abs(transaction.value)}
         </p>
-        <p className="text-xs text-muted-foreground">Balance: ${transaction.balance}</p>
       </div>
     </div>
   )
@@ -124,7 +95,7 @@ export function CreditsManager() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p className="text-5xl font-bold">${currentBalance}</p>
+            <p className="text-5xl font-bold">{currentBalance}</p>
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="secondary" className="w-full sm:w-auto">

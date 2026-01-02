@@ -27,13 +27,14 @@ type CreateLibraryResp struct {
 }
 
 type GetLibrariesReq struct {
-	MemberId    string
-	LibraryId   uint32
-	LibraryName string
+	MemberId           string
+	LibraryId          uint32
+	LibraryName        string
+	FetchAdminMappings bool
 }
 
 type GetLibrariesResp struct {
-	Libararies []model.Library
+	Libraries []model.Library
 }
 
 type AddAdminLibMappingReq struct {

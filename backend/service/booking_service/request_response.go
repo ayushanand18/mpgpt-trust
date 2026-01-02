@@ -7,10 +7,10 @@ import (
 )
 
 type GetBookingsReq struct {
-	MemberIds  []string
-	LibraryIds []uint32
-	StartTime  time.Time
-	EndTime    time.Time
+	MemberIds   []string // populated from user -> member mapping if user auth
+	LibraryIds  []uint32
+	StartTime   time.Time
+	EndTime     time.Time
 }
 
 type GetBookingsResp struct {
@@ -23,6 +23,7 @@ type CreateBookingReq struct {
 	LibraryId uint32
 	StartTime time.Time
 	EndTime   time.Time
+	Reason    string
 }
 
 type CreateBookingResp struct {

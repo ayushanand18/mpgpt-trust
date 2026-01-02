@@ -2,10 +2,13 @@ package bookingservice
 
 import (
 	"context"
+	"fmt"
 	"math"
 
+	"github.com/ayushanand18/mpgpt-trust/backend/constants"
 	"github.com/ayushanand18/mpgpt-trust/backend/environment"
 	"github.com/ayushanand18/mpgpt-trust/backend/model"
+	"github.com/ayushanand18/mpgpt-trust/backend/utils"
 )
 
 type service struct{}
@@ -24,6 +27,34 @@ func (s *service) GetBookings(ctx context.Context, req GetBookingsReq) (resp Get
 		EndTime:    req.EndTime,
 	})
 
+	libIds := make([]uint32, 0)
+	for _, booking := range resp.Bookings {
+		libIds = append(libIds, booking.LibraryId)
+	}
+
+	// unique lib ids
+	libIds = utils.GetUniqueUint32Slice(libIds)
+
+	// fetch library details
+	libraries, err := model.GetLibraries(environment.GetDbConn(ctx), model.GetLibrariesReq{
+		LibraryIds: libIds,
+	})
+	if err != nil {
+		return resp, err
+	}
+	librariesMap := make(map[uint32]model.Library)
+	for _, library := range libraries {
+		librariesMap[library.Id] = library
+	}
+
+	// populate library details in bookings
+	for i, booking := range resp.Bookings {
+		if library, exists := librariesMap[booking.LibraryId]; exists {
+			resp.Bookings[i].LibraryName = library.Name
+			resp.Bookings[i].LibraryAddress = library.Address
+		}
+	}
+
 	return resp, err
 }
 
@@ -39,11 +70,28 @@ func (s *service) CreateBooking(ctx context.Context, req CreateBookingReq) (resp
 		}
 	}()
 
+	// subtract credits accordingly also
+	numberOfSlots := math.Ceil(req.EndTime.Sub(req.StartTime).Hours() / 24) // assuming 1 credit per day
+
+	// get current credits
+	credits, err := model.GetCredits(environment.GetDbConn(ctx), model.GetCreditsReq{
+		EntityId:   req.MemberId,
+		EntityType: constants.UserTypeMember,
+	})
+	if err != nil {
+		return resp, err
+	}
+
+	if credits.Value < numberOfSlots {
+		return resp, fmt.Errorf("insufficient credits to create booking")
+	}
+
 	booking, err := model.CreateBooking(tx, model.CreateBookingReq{
 		MemberId:  req.MemberId,
 		LibraryId: req.LibraryId,
 		StartTime: req.StartTime,
 		EndTime:   req.EndTime,
+		Reason:    req.Reason,
 	})
 	if err != nil {
 		return resp, err
@@ -51,14 +99,25 @@ func (s *service) CreateBooking(ctx context.Context, req CreateBookingReq) (resp
 
 	resp.Booking = booking
 
-	// subtract credits accordingly also
-	numberOfSlots := math.Ceil(req.EndTime.Sub(req.StartTime).Hours() / 24) // assuming 1 credit per day
 	err = model.UpdateCredits(tx, model.UpdateCreditsReq{
 		EntityId:    req.MemberId,
-		EntityType:  "member",
+		EntityType:  constants.UserTypeMember,
 		ValueChange: -numberOfSlots,
 		UserId:      req.MemberId,
-		UserType:    "member",
+		UserType:    constants.UserTypeMember,
+	})
+	if err != nil {
+		return resp, err
+	}
+
+	// create credits history
+	err = model.CreateCreditsHistory(tx, model.CreditsHistory{
+		EntityId:   req.MemberId,
+		EntityType: constants.UserTypeMember,
+		Value:      -numberOfSlots,
+		Comments:   fmt.Sprintf("Booking ID: %d, Reason: %s", booking.Id, req.Reason),
+		Reason:     "Booking deduction",
+		CreatedAt:  utils.GetCurrentTimeInIst(),
 	})
 	if err != nil {
 		return resp, err

@@ -1,31 +1,38 @@
 export interface User {
-  id: string
-  memberId: string
-  name: string
-  email: string
-  phoneNumber: string
-  credits: number
-  joinedDate: string
-  status: "active" | "inactive"
+  Id: string
+  MemberId: string
+  Name: string
+  Email: string
+  PhoneNumber: string
+  CreatedAt: string
+  Credits: number
 }
 
 export interface Library {
-  id: string
+  id: number
   name: string
   address: string
   latitude: number
   longitude: number
-  capacity: number
-  openingHours: string
-  adminUsers: string[]
 }
 
 export interface Booking {
   id: string
   userId: string
-  libraryId: string
+  libraryId: number
   userName: string
   startTime: string
   endTime: string
   status: "active" | "completed" | "cancelled"
+}
+
+export interface UserData {
+  id: string
+  email: string
+  phone: string
+  name: string
+  memberId: string
+  address: string
+  city: string
+  zipCode: string
 }

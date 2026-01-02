@@ -10,6 +10,7 @@ type Library struct {
 	Address   string  `gorm:"column:address"`
 	Remarks   float64 `gorm:"column:remarks"`
 	Status    string  `gorm:"column:status"` // status: active, closed
+	Admins    []User  `gorm:"-"`
 }
 
 func (b Library) TableName() string {
@@ -51,8 +52,7 @@ func GetLibraries(tx *gorm.DB, req GetLibrariesReq) ([]Library, error) {
 	query := tx.Table(Library{}.TableName())
 
 	if req.LibraryName != "" {
-		query.Where("name = ?", req.LibraryName)
-
+		query.Where("name like ?", "%"+req.LibraryName+"%")
 	}
 
 	if err := query.Find(&libraries).Error; err != nil {

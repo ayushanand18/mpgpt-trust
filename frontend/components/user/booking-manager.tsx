@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, Clock, MapPin, Plus, X } from "lucide-react"
 import { NewBookingDialog } from "@/components/user/new-booking-dialog"
 import { useToast } from "@/hooks/use-toast"
+import { fetchBookings } from "@/actions/bookings"
 
 type Booking = {
   id: string
@@ -24,44 +25,28 @@ export function BookingManager() {
   const { toast } = useToast()
   const [showNewBooking, setShowNewBooking] = useState(false)
   const [bookings, setBookings] = useState<Booking[]>([
-    {
-      id: "1",
-      libraryName: "Central Library",
-      location: "100 Main Street, NY",
-      date: "2026-01-05",
-      time: "10:00 AM - 12:00 PM",
-      status: "upcoming",
-      purpose: "Study Room Booking",
-    },
-    {
-      id: "2",
-      libraryName: "East Branch Library",
-      location: "450 East Ave, NY",
-      date: "2026-01-01",
-      time: "2:00 PM - 4:00 PM",
-      status: "today",
-      purpose: "Book Collection",
-    },
-    {
-      id: "3",
-      libraryName: "West Branch Library",
-      location: "789 West Street, NY",
-      date: "2025-12-28",
-      time: "9:00 AM - 11:00 AM",
-      status: "past",
-      purpose: "Research Session",
-    },
-    {
-      id: "4",
-      libraryName: "North Library",
-      location: "321 North Road, NY",
-      date: "2025-12-25",
-      time: "1:00 PM - 3:00 PM",
-      status: "past",
-      purpose: "Group Study",
-    },
   ])
 
+  useEffect(() => {
+    fetchBookings().
+      then((data) => {
+        setBookings(data?.Bookings?.map((booking: any) => ({
+          id: booking.Id,
+          libraryName: booking.LibraryName,
+          location: booking.LibraryAddress,
+          date: booking.StartTime,
+          status: booking.Status,
+          purpose: booking.Purpose,
+        })))
+      }).
+      catch((error) => {
+        console.error("Error fetching bookings:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load bookings. Please try again later.",
+        })
+      })
+  }, [])
   const handleCancelBooking = (bookingId: string) => {
     setBookings(
       bookings.map((booking) => (booking.id === bookingId ? { ...booking, status: "cancelled" as const } : booking)),
@@ -72,9 +57,15 @@ export function BookingManager() {
     })
   }
 
-  const todayBookings = bookings.filter((b) => b.status === "today")
-  const upcomingBookings = bookings.filter((b) => b.status === "upcoming")
-  const pastBookings = bookings.filter((b) => b.status === "past" || b.status === "cancelled")
+  const now = new Date()
+
+  const todayBookings = bookings.filter(b => {
+    const d = new Date(b.date)
+    return d.toDateString() === now.toDateString()
+  })
+  const upcomingBookings = bookings.filter(b => new Date(b.date) > now)
+  const pastBookings = bookings.filter(b => new Date(b.date) < now)
+
 
   const BookingCard = ({ booking }: { booking: Booking }) => (
     <Card>
@@ -104,10 +95,6 @@ export function BookingManager() {
                 day: "numeric",
               })}
             </span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span>{booking.time}</span>
           </div>
           <Separator />
           <div>

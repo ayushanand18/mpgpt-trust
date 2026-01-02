@@ -10,6 +10,8 @@ import (
 	httpconstants "github.com/ayushanand18/crazyhttp/pkg/constants"
 	crazyhttp "github.com/ayushanand18/crazyhttp/pkg/server"
 	httptypes "github.com/ayushanand18/crazyhttp/pkg/types"
+	"github.com/ayushanand18/mpgpt-trust/backend/environment"
+	"github.com/ayushanand18/mpgpt-trust/backend/model"
 	adminservice "github.com/ayushanand18/mpgpt-trust/backend/service/admin_service"
 	bookingservice "github.com/ayushanand18/mpgpt-trust/backend/service/booking_service"
 	userservice "github.com/ayushanand18/mpgpt-trust/backend/service/user_service"
@@ -29,6 +31,8 @@ func RegisterServer(ctx context.Context) (err error) {
 	userService := userservice.NewUserService(ctx)
 	bookingService := bookingservice.NewBookingService(ctx)
 
+	var routes []string
+
 	// UserService
 	// get userinfo <- admin/superuser/user auth
 	server.GET("/user/{id}").Serve(func(ctx context.Context, req interface{}) (interface{}, error) {
@@ -47,6 +51,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
 
+	routes = append(routes, "/user/{id}")
+
 	// will create user <- behind superuser/user auth
 	server.POST("/user").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(userservice.CreateUserReq)
@@ -63,6 +69,8 @@ func RegisterServer(ctx context.Context) (err error) {
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
+
+	routes = append(routes, "/user")
 
 	// will update some part of user <- admin/superuser/user auth
 	server.PATCH("/user/{id}").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -100,6 +108,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
 
+	routes = append(routes, "/users")
+
 	// BookingService
 	// add a new booking for a user <- admin/superuser/user auth
 	server.POST("/booking").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -118,6 +128,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
 
+	routes = append(routes, "/booking")
+
 	// view bookings on a library
 	server.POST("/bookings").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(bookingservice.GetBookingsReq)
@@ -128,6 +140,25 @@ func RegisterServer(ctx context.Context) (err error) {
 		if err != nil {
 			return nil, err
 		}
+		return req, nil
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder()).
+		WithBeforeServe(AuthMiddleware())
+
+	routes = append(routes, "/bookings")
+
+	server.GET("/user/{id}/credits").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
+		request := i.(userservice.GetUserCreditsReq)
+		return userService.GetUserCredits(ctx, request)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+		populateUserIdAndRoleFromHttpRequest(ctx, r)
+		req := userservice.GetUserCreditsReq{}
+		paramMap := ctx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
+		user, err := model.GetUserById(environment.GetDbConn(ctx), paramMap["id"])
+		if err != nil {
+			return nil, err
+		}
+		req.MemberId = user.MemberId
 		return req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
@@ -153,6 +184,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
 
+	routes = append(routes, "/user/{id}/credits")
+
 	// add a new library <- superuser auth
 	server.POST("/library").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(adminservice.CreateLibraryReq)
@@ -170,8 +203,10 @@ func RegisterServer(ctx context.Context) (err error) {
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
 
+	routes = append(routes, "/library")
+
 	// get all libraries info <- public
-	server.GET("/libraries").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
+	server.POST("/libraries").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(adminservice.GetLibrariesReq)
 		return adminService.GetLibraries(ctx, request)
 	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
@@ -185,6 +220,8 @@ func RegisterServer(ctx context.Context) (err error) {
 		return req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder())
+
+	routes = append(routes, "/libraries")
 
 	// delete a library <- superuser auth
 	server.DELETE("/library").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -202,6 +239,8 @@ func RegisterServer(ctx context.Context) (err error) {
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
+
+	routes = append(routes, "/library")
 
 	// add admin - library mapping <- superuser auth
 	server.POST("/user/{id}/library").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -221,6 +260,14 @@ func RegisterServer(ctx context.Context) (err error) {
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
+
+	routes = append(routes, "/user/{id}/library")
+
+	for _, route := range routes {
+		server.OPTIONS(route).Serve(func(ctx context.Context, i interface{}) (resp interface{}, err error) {
+			return resp, err
+		})
+	}
 
 	if err := server.ListenAndServe(ctx); err != nil {
 		log.Fatalf("Server failed to start: %v", err)

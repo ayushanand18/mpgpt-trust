@@ -79,25 +79,6 @@ export function LibraryEditDialog({ library, open, onClose, onSave }: LibraryEdi
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="capacity">Capacity</Label>
-              <Input
-                id="capacity"
-                type="number"
-                value={formData.capacity}
-                onChange={(e) => setFormData({ ...formData, capacity: Number.parseInt(e.target.value) })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="hours">Opening Hours</Label>
-              <Input
-                id="hours"
-                value={formData.openingHours}
-                onChange={(e) => setFormData({ ...formData, openingHours: e.target.value })}
-              />
-            </div>
-          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
