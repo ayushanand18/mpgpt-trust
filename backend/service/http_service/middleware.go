@@ -38,6 +38,7 @@ func populateUserIdAndRoleFromHttpRequest(
 
 	ctx = context.WithValue(ctx, utils.ContextKeyUserId, user.Id)
 	ctx = context.WithValue(ctx, utils.ContextKeyUserRole, user.Role)
+	ctx = context.WithValue(ctx, utils.ContextKeyMemberId, user.MemberId)
 
 	return ctx
 }

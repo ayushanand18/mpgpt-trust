@@ -70,6 +70,11 @@ func (s *service) CreateBooking(ctx context.Context, req CreateBookingReq) (resp
 		}
 	}()
 
+	if req.MemberId == "" {
+		// fetch from context
+		req.MemberId = utils.GetMemberIdFromContext(ctx)
+	}
+
 	// subtract credits accordingly also
 	numberOfSlots := math.Ceil(req.EndTime.Sub(req.StartTime).Hours() / 24) // assuming 1 credit per day
 

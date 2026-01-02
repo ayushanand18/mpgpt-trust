@@ -8,6 +8,9 @@ const (
 
 	// ContextKeyUserRole is the context key used to store the authenticated user's role.
 	ContextKeyUserRole = "auth_user_role"
+
+	// ContextKeyMemberId is the context key used to store the authenticated user's memberId.
+	ContextKeyMemberId = "auth_member_id"
 )
 
 func GetUserIdFromContext(ctx context.Context) string {
@@ -30,4 +33,15 @@ func GetUserRoleFromContext(ctx context.Context) string {
 		return ""
 	}
 	return userRole
+}
+
+func GetMemberIdFromContext(ctx context.Context) string {
+	if ctx == nil {
+		return ""
+	}
+	memberId, ok := ctx.Value(ContextKeyMemberId).(string)
+	if !ok {
+		return ""
+	}
+	return memberId
 }

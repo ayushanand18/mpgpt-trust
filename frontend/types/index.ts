@@ -19,7 +19,7 @@ export interface Library {
 
 export interface Booking {
   id: string
-  userId: string
+  memberId: string
   libraryId: number
   userName: string
   startTime: string

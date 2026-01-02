@@ -32,6 +32,7 @@ export function BookingManager() {
       then((data) => {
         setBookings(data?.Bookings?.map((booking: any) => ({
           id: booking.Id,
+          memberId: booking.MemberId,
           libraryName: booking.LibraryName,
           location: booking.LibraryAddress,
           date: booking.StartTime,

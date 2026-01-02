@@ -16,11 +16,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, LibraryIcon, Calendar } from "lucide-react"
 import { searchUsers } from "@/actions/users"
 import { fetchLibraries } from "@/actions/libraries"
+import { fetchBookings } from "@/actions/bookings"
 
 export default function Home() {
   const [users, setUsers] = useState<User[]>([])
   const [libraries, setLibraries] = useState<Library[]>([])
-  const [bookings] = useState<Booking[]>([])
   const [searchResults, setSearchResults] = useState<User[]>([])
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [creditsUser, setCreditsUser] = useState<User | null>(null)
@@ -80,22 +80,25 @@ export default function Home() {
     const library = libraries.find((lib) => lib.id === libraryId)
     if (!library) return
 
-    const start = new Date(startDate)
-    const end = new Date(endDate)
+    fetchBookings(libraryId, startDate, endDate).then((data) => {
+      setFilteredBookings(data.Bookings?.map((b: any) => ({
+        id: b.Id,
+        userId: b.UserId,
+        memberId: b.MemberId,
+        libraryId: b.LibraryId,
+        userName: b.UserName,
+        startTime: b.StartTime,
+        endTime: b.EndTime,
+        status: b.Status,
+      })) || [])
 
-    const filtered = bookings.filter((booking) => {
-      if (booking.libraryId !== libraryId) return false
-      const bookingStart = new Date(booking.startTime)
-      const bookingEnd = new Date(booking.endTime)
-      return (
-        booking.status === "active" &&
-        ((bookingStart >= start && bookingStart <= end) || (bookingEnd >= start && bookingEnd <= end))
-      )
+      setSelectedLibraryName(library.name)
+      setHasFilteredBookings(true)
+    }).catch((error: Error) => {
+      console.error("Error fetching bookings:", error)
+      setFilteredBookings([])
+      setHasFilteredBookings(true)
     })
-
-    setFilteredBookings(filtered)
-    setSelectedLibraryName(library.name)
-    setHasFilteredBookings(true)
   }
 
   useEffect(() => {
@@ -114,7 +117,7 @@ export default function Home() {
       setLibraries([])
     })
   }, [])
-    
+
 
   return (
     <div className="min-h-screen bg-background">
