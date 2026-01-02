@@ -117,6 +117,7 @@ func (s *service) CreateBooking(ctx context.Context, req CreateBookingReq) (resp
 		Value:      -numberOfSlots,
 		Comments:   fmt.Sprintf("Booking ID: %d, Reason: %s", booking.Id, req.Reason),
 		Reason:     "Booking deduction",
+		CreatedAt:  utils.GetCurrentTimeInIst(),
 	})
 	if err != nil {
 		return resp, err

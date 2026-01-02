@@ -7,6 +7,7 @@ import (
 	"github.com/ayushanand18/mpgpt-trust/backend/constants"
 	"github.com/ayushanand18/mpgpt-trust/backend/environment"
 	"github.com/ayushanand18/mpgpt-trust/backend/model"
+	"github.com/ayushanand18/mpgpt-trust/backend/utils"
 )
 
 type service struct {
@@ -43,6 +44,7 @@ func (s *service) UpdateCredits(ctx context.Context, req UpdateCreditsReq) (resp
 		Value:      req.CreditsAmount,
 		Comments:   fmt.Sprintf("Credits Added, Reason: %s", req.Comment),
 		Reason:     "Credits addition",
+		CreatedAt:  utils.GetCurrentTimeInIst(),
 	})
 	if err != nil {
 		return resp, err

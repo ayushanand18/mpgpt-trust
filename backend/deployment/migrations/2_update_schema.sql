@@ -33,3 +33,6 @@ CHECK (length(trim(id)) > 0);
 
 ALTER TABLE lms.bookings
 ADD COLUMN purpose TEXT;
+
+ALTER TABLE lms.credits_history
+ADD COLUMN created_at TIMESTAMPTZ NOT NULL DEFAULT now();
