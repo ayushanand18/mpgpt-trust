@@ -94,7 +94,7 @@ export function LoginForm() {
               Continue with Google
             </Button>
 
-            <div className="relative">
+            <div className="relative hidden">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-border" />
               </div>
@@ -103,7 +103,7 @@ export function LoginForm() {
               </div>
             </div>
 
-            <form onSubmit={handleEmailPhoneSignIn} className="space-y-4">
+            <form onSubmit={handleEmailPhoneSignIn} className="space-y-4 hidden">
               <div className="space-y-2">
                 <Label htmlFor="login-input" className="text-sm font-medium">
                   Email or Phone Number
@@ -135,7 +135,7 @@ export function LoginForm() {
               </Button>
             </form>
 
-            <div className="text-center">
+            <div className="text-center hidden">
               <Button variant="link" className="text-sm text-muted-foreground hover:text-foreground">
                 Forgot password?
               </Button>
@@ -170,7 +170,7 @@ export function LoginForm() {
               Sign up with Google
             </Button>
 
-            <div className="relative">
+            <div className="relative hidden">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-border" />
               </div>
@@ -179,7 +179,7 @@ export function LoginForm() {
               </div>
             </div>
 
-            <form onSubmit={handleEmailPhoneSignIn} className="space-y-4">
+            <form onSubmit={handleEmailPhoneSignIn} className="space-y-4 hidden">
               <div className="space-y-2">
                 <Label htmlFor="signup-name" className="text-sm font-medium">
                   Full Name

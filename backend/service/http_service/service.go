@@ -38,15 +38,18 @@ func RegisterServer(ctx context.Context) (err error) {
 	server.GET("/user/{id}").Serve(func(ctx context.Context, req interface{}) (interface{}, error) {
 		request := req.(userservice.GetUserReq)
 		return userService.GetUser(ctx, request)
-	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
-		populateUserIdAndRoleFromHttpRequest(ctx, r)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (outgoingCtx context.Context, request interface{}, err error) {
+		outgoingCtx, err = populateUserIdAndRoleFromHttpRequest(ctx, r)
+		if err != nil {
+			return outgoingCtx, request, err
+		}
 
-		pathValues := ctx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
+		pathValues := outgoingCtx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
 		id := pathValues["id"]
 		request = userservice.GetUserReq{
 			Id: id,
 		}
-		return request, nil
+		return outgoingCtx, request, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
@@ -57,15 +60,18 @@ func RegisterServer(ctx context.Context) (err error) {
 	server.POST("/user").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(userservice.CreateUserReq)
 		return userService.CreateUser(ctx, request)
-	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
-		populateUserIdAndRoleFromHttpRequest(ctx, r)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (outgoingCtx context.Context, request interface{}, err error) {
+		outgoingCtx, err = populateUserIdAndRoleFromHttpRequest(ctx, r)
+		if err != nil {
+			return outgoingCtx, request, err
+		}
 
 		var req userservice.CreateUserReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			return nil, err
+			return outgoingCtx, req, err
 		}
-		return req, nil
+		return outgoingCtx, req, err
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
@@ -76,17 +82,20 @@ func RegisterServer(ctx context.Context) (err error) {
 	server.PATCH("/user/{id}").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(userservice.UpdateUserReq)
 		return userService.UpdateUser(ctx, request)
-	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
-		populateUserIdAndRoleFromHttpRequest(ctx, r)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (outgoingCtx context.Context, request interface{}, err error) {
+		outgoingCtx, err = populateUserIdAndRoleFromHttpRequest(ctx, r)
+		if err != nil {
+			return outgoingCtx, request, err
+		}
 
-		paramsMap := ctx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
+		paramsMap := outgoingCtx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
 		var req userservice.UpdateUserReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			return nil, err
+			return outgoingCtx, req, err
 		}
 		req.Id = paramsMap["id"]
-		return req, nil
+		return outgoingCtx, req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
@@ -95,15 +104,18 @@ func RegisterServer(ctx context.Context) (err error) {
 	server.POST("/users").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(userservice.GetUsersReq)
 		return userService.GetUsers(ctx, request)
-	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
-		populateUserIdAndRoleFromHttpRequest(ctx, r)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (outgoingCtx context.Context, request interface{}, err error) {
+		outgoingCtx, err = populateUserIdAndRoleFromHttpRequest(ctx, r)
+		if err != nil {
+			return outgoingCtx, request, err
+		}
 
 		var req userservice.GetUsersReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			return nil, err
+			return outgoingCtx, req, err
 		}
-		return req, nil
+		return outgoingCtx, req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
@@ -115,15 +127,18 @@ func RegisterServer(ctx context.Context) (err error) {
 	server.POST("/booking").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(bookingservice.CreateBookingReq)
 		return bookingService.CreateBooking(ctx, request)
-	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
-		populateUserIdAndRoleFromHttpRequest(ctx, r)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (outgoingCtx context.Context, request interface{}, err error) {
+		outgoingCtx, err = populateUserIdAndRoleFromHttpRequest(ctx, r)
+		if err != nil {
+			return outgoingCtx, request, err
+		}
 
 		var req bookingservice.CreateBookingReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			return nil, err
+			return outgoingCtx, req, err
 		}
-		return req, nil
+		return outgoingCtx, req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
@@ -134,13 +149,17 @@ func RegisterServer(ctx context.Context) (err error) {
 	server.POST("/bookings").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(bookingservice.GetBookingsReq)
 		return bookingService.GetBookings(ctx, request)
-	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (outgoingCtx context.Context, request interface{}, err error) {
+		outgoingCtx, err = populateUserIdAndRoleFromHttpRequest(ctx, r)
+		if err != nil {
+			return outgoingCtx, request, err
+		}
 		var req bookingservice.GetBookingsReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			return nil, err
+			return outgoingCtx, req, err
 		}
-		return req, nil
+		return outgoingCtx, req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
@@ -150,16 +169,19 @@ func RegisterServer(ctx context.Context) (err error) {
 	server.GET("/user/{id}/credits").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(userservice.GetUserCreditsReq)
 		return userService.GetUserCredits(ctx, request)
-	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
-		populateUserIdAndRoleFromHttpRequest(ctx, r)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (outgoingCtx context.Context, request interface{}, err error) {
+		outgoingCtx, err = populateUserIdAndRoleFromHttpRequest(ctx, r)
+		if err != nil {
+			return outgoingCtx, request, err
+		}
 		req := userservice.GetUserCreditsReq{}
-		paramMap := ctx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
+		paramMap := outgoingCtx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
 		user, err := model.GetUserById(environment.GetDbConn(ctx), paramMap["id"])
 		if err != nil {
-			return nil, err
+			return outgoingCtx, request, err
 		}
 		req.MemberId = user.MemberId
-		return req, nil
+		return outgoingCtx, req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
@@ -169,15 +191,18 @@ func RegisterServer(ctx context.Context) (err error) {
 	server.POST("/user/{id}/credits").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(adminservice.UpdateCreditsReq)
 		return adminService.UpdateCredits(ctx, request)
-	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
-		populateUserIdAndRoleFromHttpRequest(ctx, r)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (outgoingCtx context.Context, request interface{}, err error) {
+		outgoingCtx, err = populateUserIdAndRoleFromHttpRequest(ctx, r)
+		if err != nil {
+			return outgoingCtx, request, err
+		}
 
 		var req adminservice.UpdateCreditsReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			return nil, err
+			return outgoingCtx, req, err
 		}
-		return req, nil
+		return outgoingCtx, req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
@@ -188,15 +213,18 @@ func RegisterServer(ctx context.Context) (err error) {
 	server.POST("/library").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(adminservice.CreateLibraryReq)
 		return adminService.CreateLibrary(ctx, request)
-	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
-		populateUserIdAndRoleFromHttpRequest(ctx, r)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (outgoingCtx context.Context, request interface{}, err error) {
+		outgoingCtx, err = populateUserIdAndRoleFromHttpRequest(ctx, r)
+		if err != nil {
+			return outgoingCtx, request, err
+		}
 
 		var req adminservice.CreateLibraryReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			return nil, err
+			return outgoingCtx, req, err
 		}
-		return req, nil
+		return outgoingCtx, req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
@@ -207,15 +235,18 @@ func RegisterServer(ctx context.Context) (err error) {
 	server.PATCH("/library").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(adminservice.UpdateLibraryReq)
 		return adminService.UpdateLibrary(ctx, request)
-	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
-		populateUserIdAndRoleFromHttpRequest(ctx, r)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (outgoingCtx context.Context, request interface{}, err error) {
+		outgoingCtx, err = populateUserIdAndRoleFromHttpRequest(ctx, r)
+		if err != nil {
+			return outgoingCtx, request, err
+		}
 
 		var req adminservice.UpdateLibraryReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			return nil, err
+			return outgoingCtx, req, err
 		}
-		return req, nil
+		return outgoingCtx, req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
@@ -226,15 +257,18 @@ func RegisterServer(ctx context.Context) (err error) {
 	server.POST("/libraries").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(adminservice.GetLibrariesReq)
 		return adminService.GetLibraries(ctx, request)
-	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
-		populateUserIdAndRoleFromHttpRequest(ctx, r)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (outgoingCtx context.Context, request interface{}, err error) {
+		outgoingCtx, err = populateUserIdAndRoleFromHttpRequest(ctx, r)
+		if err != nil {
+			return outgoingCtx, request, err
+		}
 
 		var req adminservice.GetLibrariesReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			return nil, err
+			return outgoingCtx, req, err
 		}
-		return req, nil
+		return outgoingCtx, req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder())
 
@@ -244,15 +278,18 @@ func RegisterServer(ctx context.Context) (err error) {
 	server.DELETE("/library").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(adminservice.DeleteLibraryReq)
 		return adminService.DeleteLibrary(ctx, request)
-	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
-		populateUserIdAndRoleFromHttpRequest(ctx, r)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (outgoingCtx context.Context, request interface{}, err error) {
+		outgoingCtx, err = populateUserIdAndRoleFromHttpRequest(ctx, r)
+		if err != nil {
+			return outgoingCtx, request, err
+		}
 
 		var req adminservice.DeleteLibraryReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			return nil, err
+			return outgoingCtx, req, err
 		}
-		return req, nil
+		return outgoingCtx, req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
@@ -263,15 +300,18 @@ func RegisterServer(ctx context.Context) (err error) {
 	server.POST("/library/admin").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(adminservice.AddAdminLibMappingReq)
 		return adminService.AddAdminLibMapping(ctx, request)
-	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
-		populateUserIdAndRoleFromHttpRequest(ctx, r)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (outgoingCtx context.Context, request interface{}, err error) {
+		outgoingCtx, err = populateUserIdAndRoleFromHttpRequest(ctx, r)
+		if err != nil {
+			return outgoingCtx, request, err
+		}
 
 		var req adminservice.AddAdminLibMappingReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			return nil, err
+			return outgoingCtx, req, err
 		}
-		return req, nil
+		return outgoingCtx, req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
@@ -281,6 +321,8 @@ func RegisterServer(ctx context.Context) (err error) {
 	for _, route := range routes {
 		server.OPTIONS(route).Serve(func(ctx context.Context, i interface{}) (resp interface{}, err error) {
 			return resp, err
+		}).WithDecoder(func(ctx context.Context, r *http.Request) (outCtx context.Context, request interface{}, err error) {
+			return outCtx, request, nil
 		})
 	}
 

@@ -3,7 +3,6 @@ package httpservice
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"strings"
 
@@ -18,29 +17,32 @@ import (
 func populateUserIdAndRoleFromHttpRequest(
 	ctx context.Context,
 	r *http.Request,
-) context.Context {
+) (context.Context, error) {
 	authStr := r.Header.Get("Authorization")
 	if authStr == "" || !strings.HasPrefix(authStr, "Bearer ") {
-		return ctx
+		return ctx, errors.New("Authorization header not found")
 	}
 
 	token := strings.TrimPrefix(authStr, "Bearer ")
 
 	userID, err := extractUserIDFromJWT(token)
 	if err != nil {
-		return ctx
+		return ctx, errors.New("Authorization header not found")
 	}
+
+	ctx = context.WithValue(ctx, utils.ContextKeyUserId, userID)
 
 	user, err := model.GetUserById(environment.GetDbConn(ctx), userID)
 	if err != nil && err == gorm.ErrRecordNotFound {
-		return ctx
+		return ctx, nil
+	} else if err != nil {
+		return ctx, err
 	}
 
-	ctx = context.WithValue(ctx, utils.ContextKeyUserId, user.Id)
 	ctx = context.WithValue(ctx, utils.ContextKeyUserRole, user.Role)
 	ctx = context.WithValue(ctx, utils.ContextKeyMemberId, user.MemberId)
 
-	return ctx
+	return ctx, nil
 }
 
 func extractUserIDFromJWT(tokenStr string) (string, error) {
@@ -66,7 +68,6 @@ func AuthMiddleware() httptypes.HttpRequestMiddleware {
 	return func(ctx context.Context, req interface{}) (context.Context, interface{}, error) {
 		// perform auth checks here
 		// e.g., validate tokens, check user roles, etc.
-		log.Printf("Incoming request: %+v\n", req)
 		return ctx, req, nil
 	}
 }

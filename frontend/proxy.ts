@@ -6,6 +6,11 @@ export async function proxy(request: NextRequest) {
     request,
   })
 
+  const pathname = request.nextUrl.pathname
+  const isAdminRoute = pathname.startsWith("/admin")
+  const isUserRoute = pathname.startsWith("/user")
+  const isAuthRoute = pathname.startsWith("/auth") && !pathname.startsWith("/auth/")
+
   // With Fluid compute, don't put this client in a global environment
   // variable. Always create a new one on each request.
   const supabase = createServerClient(
@@ -37,44 +42,55 @@ export async function proxy(request: NextRequest) {
 
   const user = data?.claims
 
-  if (
-    !user &&
-    (
-      request.nextUrl.pathname.startsWith('/admin') ||
-      request.nextUrl.pathname.startsWith('/user')
-    )
-  ) {
+  if (!user && (isAdminRoute || isUserRoute)) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = '/auth'
     return NextResponse.redirect(url)
   }
 
-  if (user && (request.nextUrl.pathname === '/auth')) {
+  if (user && (isAdminRoute || isUserRoute || isAuthRoute)) {
     try {
-      const sessionData = await supabase.auth.getSession()
-      const { session } = sessionData.data
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${user.sub}`,
         {
-          method: 'GET',
           headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session?.access_token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       )
 
-      if (res.ok) {
-        const userData = await res.json()
+      if (!res.ok) {
+        return NextResponse.redirect(new URL("/auth", request.url))
+      }
 
+      const userData = (await res.json()) ?? {}
+      const role = userData.Data?.User?.Role
+
+      if (role === "admin" && isUserRoute) {
         const url = request.nextUrl.clone()
-        url.pathname = userData.data?.Role === 'admin' ? '/admin' : '/user'
+        url.pathname = "/admin"
         return NextResponse.redirect(url)
       }
-    } catch (err) {
-      return NextResponse.redirect('/')
+
+      if (role !== "admin" && isAdminRoute) {
+        const url = request.nextUrl.clone()
+        url.pathname = "/user"
+        return NextResponse.redirect(url)
+      }
+
+      if (isAuthRoute) {
+        const url = request.nextUrl.clone()
+        url.pathname = role === "admin" || role === "superuser" ? "/admin" : "/user"
+        return NextResponse.redirect(url)
+      }
+
+      return NextResponse.next()
+    } catch {
+      return NextResponse.redirect(new URL("/auth", request.url))
     }
   }
 

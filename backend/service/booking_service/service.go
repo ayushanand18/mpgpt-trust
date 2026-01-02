@@ -24,6 +24,9 @@ func (s *service) GetBookings(ctx context.Context, req GetBookingsReq) (resp Get
 	if userId == "" {
 		return resp, fmt.Errorf("unauthorized access to user details")
 	}
+	if utils.GetUserRoleFromContext(ctx) == constants.UserTypeMember {
+		req.MemberIds = []string{utils.GetMemberIdFromContext(ctx)}
+	}
 
 	resp.Bookings, err = model.GetBookings(environment.GetDbConn(ctx), model.GetBookingsReq{
 		MemberIds:  req.MemberIds,
