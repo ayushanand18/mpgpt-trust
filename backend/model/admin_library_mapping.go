@@ -40,8 +40,14 @@ type GetAdminLibraryMappingsReq struct {
 
 func GetAdminLibraryMappings(tx *gorm.DB, req GetAdminLibraryMappingsReq) ([]AdminLibraryMapping, error) {
 	var mappings []AdminLibraryMapping
-	query := tx.Table(AdminLibraryMapping{}.TableName()).
-		Where("member_id = ?", req.MemberId)
+	query := tx.Table(AdminLibraryMapping{}.TableName())
+	if req.MemberId != "" {
+		query = query.Where("member_id = ?", req.MemberId)
+	}
+
+	if len(req.LibraryIds) > 0 {
+		query = query.Where("library_id IN ?", req.LibraryIds)
+	}
 
 	if err := query.Find(&mappings).Error; err != nil {
 		return nil, err

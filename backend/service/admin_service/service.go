@@ -135,6 +135,8 @@ func (s *service) GetLibraries(ctx context.Context, req GetLibrariesReq) (resp G
 		return resp, err
 	}
 
+	fmt.Printf("Req: %+v", req)
+
 	if req.FetchAdminMappings {
 		libIds := []uint32{}
 		for _, lib := range resp.Libraries {

@@ -99,14 +99,15 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetchLibraries("").then((libs) => {
-      console.log("Fetched libraries:", libs)
+    fetchLibraries("", true).then((libs) => {
+
       setLibraries(libs?.Libraries?.map((lib: any) => ({
         id: lib.Id,
         name: lib.Name,
         address: lib.Address,
         latitude: lib.Latitude,
         longitude: lib.Longitude,
+        admins: lib.Admins || [],
       })) || [])
     }).catch((error: Error) => {
       console.error("Error fetching libraries:", error)

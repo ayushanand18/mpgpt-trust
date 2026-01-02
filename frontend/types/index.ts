@@ -14,6 +14,7 @@ export interface Library {
   address: string
   latitude: number
   longitude: number
+  admins: any[]
 }
 
 export interface Booking {

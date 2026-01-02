@@ -243,25 +243,23 @@ func RegisterServer(ctx context.Context) (err error) {
 	routes = append(routes, "/library")
 
 	// add admin - library mapping <- superuser auth
-	server.POST("/user/{id}/library").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
+	server.POST("/library/admin").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(adminservice.AddAdminLibMappingReq)
 		return adminService.AddAdminLibMapping(ctx, request)
 	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
 		populateUserIdAndRoleFromHttpRequest(ctx, r)
 
-		var req userservice.CreateUserReq
+		var req adminservice.AddAdminLibMappingReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			return nil, err
 		}
-		paramMap := ctx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
-		req.Id = paramMap["id"]
 		return req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
 		WithBeforeServe(AuthMiddleware())
 
-	routes = append(routes, "/user/{id}/library")
+	routes = append(routes, "/library/admin")
 
 	for _, route := range routes {
 		server.OPTIONS(route).Serve(func(ctx context.Context, i interface{}) (resp interface{}, err error) {
