@@ -63,8 +63,11 @@ func (s *service) GetUsers(ctx context.Context, req GetUsersReq) (resp GetUsersR
 // 1. update user details
 func (s *service) UpdateUser(ctx context.Context, req UpdateUserReq) (resp UpdateUserResp, err error) {
 	err = model.UpdateUser(environment.GetDbConn(ctx), model.UpdateUserReq{
-		Id:       req.Id,
-		MemberId: req.MemberId,
+		Id:          req.Id,
+		MemberId:    req.MemberId,
+		PhoneNumber: req.PhoneNumber,
+		Name:        req.Name,
+		Email:       req.Email,
 	})
 	return resp, nil
 }

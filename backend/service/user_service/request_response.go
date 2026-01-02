@@ -25,8 +25,11 @@ type GetUsersResp struct {
 }
 
 type UpdateUserReq struct {
-	Id       string
-	MemberId *string // fields to update, are optional
+	Id          string
+	MemberId    *string // fields to update, are optional
+	PhoneNumber *string
+	Name        *string
+	Email       *string
 }
 
 type UpdateUserResp struct {

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Edit2, Save, X, CreditCard } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { UserProfileData } from "@/types/props"
+import { editUser } from "@/actions/users"
 
 
 export function UserProfile({userDataProp}: {userDataProp?: UserProfileData}) {
@@ -18,11 +19,21 @@ export function UserProfile({userDataProp}: {userDataProp?: UserProfileData}) {
 
   const handleSave = () => {
     userDataProp?.setUserData(editData)
-    setIsEditing(false)
-    toast({
-      title: "Profile updated",
-      description: "Your information has been saved successfully.",
+
+    editUser(editData).then(() => {
+      toast({
+        title: "Profile updated",
+        description: "Your information has been saved successfully.",
+      })
+    }).catch((error: Error) => {
+      console.error("Error updating profile:", error)
+      toast({
+        title: "Error updating profile",
+        description: "There was an error saving your information. Please try again later.",
+      })
     })
+    
+    setIsEditing(false)
   }
 
   const handleCancel = () => {

@@ -74,8 +74,11 @@ func GetUsers(tx *gorm.DB, req GetUsersReq) ([]User, error) {
 }
 
 type UpdateUserReq struct {
-	Id       string
-	MemberId *string
+	Id          string
+	MemberId    *string
+	PhoneNumber *string
+	Name        *string
+	Email       *string
 }
 
 func UpdateUser(tx *gorm.DB, req UpdateUserReq) error {
@@ -83,6 +86,18 @@ func UpdateUser(tx *gorm.DB, req UpdateUserReq) error {
 
 	if req.MemberId != nil {
 		updateMap["member_id"] = req.MemberId
+	}
+
+	if req.PhoneNumber != nil {
+		updateMap["phone_number"] = req.PhoneNumber
+	}
+
+	if req.Name != nil {
+		updateMap["name"] = req.Name
+	}
+
+	if req.Email != nil {
+		updateMap["email"] = req.Email
 	}
 
 	updateMap["updated_at"] = utils.GetCurrentTimeInIst()
