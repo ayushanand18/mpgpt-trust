@@ -12,15 +12,21 @@ interface AddCreditsDialogProps {
   userName: string
   currentCredits: number
   onClose: () => void
-  onAdd: (amount: number) => void
+  onAdd: (amount: number, utrNumber: string, comment: string) => void
 }
 
 export function AddCreditsDialog({ open, userName, currentCredits, onClose, onAdd }: AddCreditsDialogProps) {
-  const [amount, setAmount] = useState(50)
+  const [amount, setAmount] = useState(5)
+  const [utrNumber, setUtrNumber] = useState("")
+  const [comment, setComment] = useState("")
 
   const handleAdd = () => {
-    onAdd(amount)
-    setAmount(50)
+    if (amount <= 0 || utrNumber.trim() === "" || comment.trim() === "") return
+
+    onAdd(amount, utrNumber, comment)
+    setAmount(5)
+    setUtrNumber("")
+    setComment("")
     onClose()
   }
 
@@ -40,7 +46,7 @@ export function AddCreditsDialog({ open, userName, currentCredits, onClose, onAd
           <div className="grid gap-2">
             <Label htmlFor="amount">Amount to Add</Label>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={() => setAmount(Math.max(0, amount - 10))}>
+              <Button variant="outline" size="icon" onClick={() => setAmount(Math.max(0, amount - 1))}>
                 <Minus className="h-4 w-4" />
               </Button>
               <Input
@@ -50,10 +56,32 @@ export function AddCreditsDialog({ open, userName, currentCredits, onClose, onAd
                 onChange={(e) => setAmount(Number.parseInt(e.target.value) || 0)}
                 className="text-center"
               />
-              <Button variant="outline" size="icon" onClick={() => setAmount(amount + 10)}>
+              <Button variant="outline" size="icon" onClick={() => setAmount(amount + 1)}>
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="utrNumber">UTR Number</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="utrNumber"
+                type="text"
+                value={utrNumber}
+                onChange={(e) => setUtrNumber(e.target.value)}
+                className="text-center"
+              />
+            </div>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="comment">Comment</Label>
+            <Input
+              id="comment"
+              type="text"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="text-center"
+            />
           </div>
           <div className="bg-muted p-3 rounded-lg">
             <p className="text-sm">
@@ -65,7 +93,7 @@ export function AddCreditsDialog({ open, userName, currentCredits, onClose, onAd
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleAdd}>Add Credits</Button>
+          <Button onClick={handleAdd} disabled={amount <= 0 || utrNumber.trim() === "" || comment.trim() === ""}>Add Credits</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -20,6 +20,11 @@ func NewUserService(ctx context.Context) *service {
 // GetUser
 // 1. fetch user details based on user id
 func (s *service) GetUser(ctx context.Context, req GetUserReq) (resp GetUserResp, err error) {
+	userId := utils.GetUserIdFromContext(ctx)
+	if userId == "" {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+
 	resp.User, err = model.GetUserById(environment.GetDbConn(ctx), req.Id)
 	if err != nil && err == gorm.ErrRecordNotFound {
 		return resp, nil
@@ -49,6 +54,11 @@ func (s *service) GetUser(ctx context.Context, req GetUserReq) (resp GetUserResp
 // GetUsers
 // 1. fetch users based on various filters
 func (s *service) GetUsers(ctx context.Context, req GetUsersReq) (resp GetUsersResp, err error) {
+	userRole := utils.GetUserRoleFromContext(ctx)
+	if userRole != constants.UserTypeSuperUser && userRole != constants.UserTypeAdmin {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+
 	resp.Users, err = model.GetUsers(environment.GetDbConn(ctx), model.GetUsersReq{
 		UserIds:      req.UserIds,
 		MemberIds:    req.MemberIds,
@@ -56,12 +66,35 @@ func (s *service) GetUsers(ctx context.Context, req GetUsersReq) (resp GetUsersR
 		PhoneNumbers: req.PhoneNumbers,
 		Limit:        req.Limit,
 	})
+	// for each user, fetch credits also
+	memberIds := []string{}
+	for _, user := range resp.Users {
+		memberIds = append(memberIds, user.MemberId)
+	}
+	creditsMap, err := model.BulkGetCredits(environment.GetDbConn(ctx), model.BulkGetCreditsReq{
+		EntityIds:  memberIds,
+		EntityType: constants.UserTypeMember,
+	})
+	if err != nil {
+		return resp, err
+	}
+
+	for i, user := range resp.Users {
+		if credits, exists := creditsMap[user.MemberId]; exists {
+			resp.Users[i].CurrentCredits = credits.Value
+		}
+	}
 	return resp, nil
 }
 
 // UpdateUser
 // 1. update user details
 func (s *service) UpdateUser(ctx context.Context, req UpdateUserReq) (resp UpdateUserResp, err error) {
+	userId := utils.GetUserIdFromContext(ctx)
+	if userId == "" {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+
 	err = model.UpdateUser(environment.GetDbConn(ctx), model.UpdateUserReq{
 		Id:          req.Id,
 		MemberId:    req.MemberId,
@@ -132,6 +165,11 @@ func (s *service) CreateUser(ctx context.Context, req CreateUserReq) (resp Creat
 }
 
 func (s *service) GetUserCredits(ctx context.Context, req GetUserCreditsReq) (resp GetUserCreditsResp, err error) {
+	userId := utils.GetUserIdFromContext(ctx)
+	if userId == "" {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+
 	credits, err := model.GetCredits(environment.GetDbConn(ctx), model.GetCreditsReq{
 		EntityId:   req.MemberId,
 		EntityType: constants.UserTypeMember,

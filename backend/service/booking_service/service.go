@@ -20,6 +20,11 @@ func NewBookingService(ctx context.Context) *service {
 // GetBookings
 // 1. fetch bookings based on MemberIds and LibraryIds
 func (s *service) GetBookings(ctx context.Context, req GetBookingsReq) (resp GetBookingsResp, err error) {
+	userId := utils.GetUserIdFromContext(ctx)
+	if userId == "" {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+
 	resp.Bookings, err = model.GetBookings(environment.GetDbConn(ctx), model.GetBookingsReq{
 		MemberIds:  req.MemberIds,
 		LibraryIds: req.LibraryIds,
@@ -61,6 +66,11 @@ func (s *service) GetBookings(ctx context.Context, req GetBookingsReq) (resp Get
 // CreateBooking
 // 1. create a booking entry in bookings table
 func (s *service) CreateBooking(ctx context.Context, req CreateBookingReq) (resp CreateBookingResp, err error) {
+	userId := utils.GetUserIdFromContext(ctx)
+	if userId == "" {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+
 	tx := environment.GetDbConn(ctx).Begin()
 	defer func() {
 		if err != nil {

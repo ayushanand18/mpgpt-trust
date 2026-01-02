@@ -73,3 +73,26 @@ func CreateCredits(tx *gorm.DB, req Credits) error {
 	}
 	return nil
 }
+
+type BulkGetCreditsReq struct {
+	EntityIds  []string
+	EntityType string
+}
+
+func BulkGetCredits(tx *gorm.DB, req BulkGetCreditsReq) (map[string]Credits, error) {
+	var creditsList []Credits
+	creditsMap := make(map[string]Credits)
+
+	query := tx.Table(Credits{}.TableName()).
+		Where("entity_id IN ? AND entity_type = ?", req.EntityIds, req.EntityType)
+
+	if err := query.Find(&creditsList).Error; err != nil {
+		return nil, err
+	}
+
+	for _, credits := range creditsList {
+		creditsMap[credits.EntityId] = credits
+	}
+
+	return creditsMap, nil
+}

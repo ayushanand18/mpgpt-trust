@@ -45,7 +45,7 @@ export async function createUser() {
         PhoneNumber: session.user.user_metadata.phone || "",
         Id: session.user.id,
         UserName: session.user.email || "",
-        Role: "student",
+        Role: "member",
       })
     },
   )
@@ -65,7 +65,6 @@ export async function editUser(editData: any) {
     throw new Error('No active session found')
   }
 
-
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${session.user.id}`,
     {
@@ -75,11 +74,12 @@ export async function editUser(editData: any) {
         Authorization: `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({
-        Name: editData.name ?? "Library User",
-        Email: editData.email ?? "",
-        PhoneNumber: editData.phone ?? "",
-        Id: editData.id ?? session.user.id,
-        MemberId: editData.memberId ?? "",
+        Name: editData.name ?? editData.Name ?? "Library User",
+        Email: editData.email ?? editData.Email ?? "",
+        PhoneNumber: editData.phone ?? editData.PhoneNumber ?? "",
+        Id: editData.id ?? editData?.Id ?? session.user.id,
+        MemberId: editData.memberId ?? editData.MemberId ?? "",
+        Role: editData.Role ?? "member",
       })
     },
   )

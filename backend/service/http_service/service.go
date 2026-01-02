@@ -53,7 +53,7 @@ func RegisterServer(ctx context.Context) (err error) {
 
 	routes = append(routes, "/user/{id}")
 
-	// will create user <- behind superuser/user auth
+	// will create user <- behind admin/superuser/user auth
 	server.POST("/user").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(userservice.CreateUserReq)
 		return userService.CreateUser(ctx, request)
@@ -172,13 +172,11 @@ func RegisterServer(ctx context.Context) (err error) {
 	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
 		populateUserIdAndRoleFromHttpRequest(ctx, r)
 
-		var req userservice.CreateUserReq
+		var req adminservice.UpdateCreditsReq
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			return nil, err
 		}
-		paramMap := ctx.Value(httpconstants.HttpRequestPathValues).(map[string]string)
-		req.Id = paramMap["id"]
 		return req, nil
 	}).WithEncoder(GenericEncoder()).
 		WithErrorEncoder(ErrorEncoder()).
@@ -205,7 +203,26 @@ func RegisterServer(ctx context.Context) (err error) {
 
 	routes = append(routes, "/library")
 
-	// get all libraries info <- public
+	// edit a library <- superuser auth
+	server.PATCH("/library").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
+		request := i.(adminservice.UpdateLibraryReq)
+		return adminService.UpdateLibrary(ctx, request)
+	}).WithDecoder(func(ctx context.Context, r *http.Request) (request interface{}, err error) {
+		populateUserIdAndRoleFromHttpRequest(ctx, r)
+
+		var req adminservice.UpdateLibraryReq
+		err = json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			return nil, err
+		}
+		return req, nil
+	}).WithEncoder(GenericEncoder()).
+		WithErrorEncoder(ErrorEncoder()).
+		WithBeforeServe(AuthMiddleware())
+
+	routes = append(routes, "/library")
+
+	// get all libraries info <- admin/superuser/user auth
 	server.POST("/libraries").Serve(func(ctx context.Context, i interface{}) (interface{}, error) {
 		request := i.(adminservice.GetLibrariesReq)
 		return adminService.GetLibraries(ctx, request)

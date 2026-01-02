@@ -14,9 +14,10 @@ import { BookingsTable } from "@/components/admin/bookings-table"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, LibraryIcon, Calendar } from "lucide-react"
-import { searchUsers } from "@/actions/users"
-import { fetchLibraries } from "@/actions/libraries"
+import { editUser, searchUsers } from "@/actions/users"
+import { editLibrary, fetchLibraries } from "@/actions/libraries"
 import { fetchBookings } from "@/actions/bookings"
+import { addCredits } from "@/actions/credits"
 
 export default function Home() {
   const [users, setUsers] = useState<User[]>([])
@@ -41,6 +42,8 @@ export default function Home() {
         MemberId: u.MemberId,
         UserName: u.UserName,
         CreatedAt: u.CreatedAt,
+        Role: u.Role,
+        Credits: u.CurrentCredits,
       })) || [])
       setHasSearched(true)
     }).catch((error: Error) => {
@@ -51,8 +54,13 @@ export default function Home() {
   }
 
   const handleEditUser = (updatedUser: User) => {
-    setUsers(users.map((user) => (user.Id === updatedUser.Id ? updatedUser : user)))
-    setSearchResults(searchResults.map((user) => (user.Id === updatedUser.Id ? updatedUser : user)))
+    console.log("Editing user:", updatedUser)
+    editUser(updatedUser).then(() => {
+      setUsers(users.map((user) => (user.Id === updatedUser.Id ? updatedUser : user)))
+      setSearchResults(searchResults.map((user) => (user.Id === updatedUser.Id ? updatedUser : user)))
+    }).catch((error: Error) => {
+      console.error("Error editing user:", error)
+    })
   }
 
   const handleDeleteUser = (userId: string) => {
@@ -62,18 +70,22 @@ export default function Home() {
     }
   }
 
-  const handleAddCredits = (amount: number) => {
+  const handleAddCredits = (amount: number, utrNumber: string, comment: string) => {
     if (creditsUser) {
-      const updatedUser = {
-        ...creditsUser,
-        Credits: creditsUser.Credits + amount,
-      }
-      handleEditUser(updatedUser)
+      
+      addCredits(creditsUser, amount, utrNumber, comment).then(() => {
+      }).catch((error: Error) => {
+        console.error("Error adding credits:", error)
+      })
     }
   }
 
   const handleEditLibrary = (updatedLibrary: Library) => {
-    setLibraries(libraries.map((lib) => (lib.id === updatedLibrary.id ? updatedLibrary : lib)))
+    editLibrary(updatedLibrary).then(() => {
+      setLibraries(libraries.map((lib) => (lib.id == updatedLibrary.id ? updatedLibrary : lib)))
+    }).catch((error: Error) => {
+      console.error("Error editing library:", error)
+    })
   }
 
   const handleFilterBookings = (libraryId: number, startDate: string, endDate: string) => {

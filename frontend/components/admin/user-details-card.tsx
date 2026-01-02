@@ -44,7 +44,7 @@ export function UserDetailsCard({ user, onEdit, onDelete }: UserDetailsCardProps
           </div>
           <div className="flex items-center gap-3">
             <CreditCard className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{user.Credits} credits</span>
+            <span className="text-sm font-medium">{user.Credits}</span>
           </div>
           <div className="flex items-center gap-3">
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -60,6 +60,7 @@ export function UserDetailsCard({ user, onEdit, onDelete }: UserDetailsCardProps
             variant="outline"
             className="flex-1 text-destructive hover:bg-destructive hover:text-destructive-foreground bg-transparent"
             onClick={() => onDelete(user.Id)}
+            disabled={true}
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Delete

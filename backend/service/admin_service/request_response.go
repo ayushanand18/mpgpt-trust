@@ -51,3 +51,16 @@ type DeleteLibraryReq struct {
 
 type DeleteLibraryResp struct {
 }
+
+type UpdateLibraryReq struct {
+	Id        uint32
+	Name      *string
+	Latitude  *float64
+	Longitude *float64
+	Address   *string
+	Status    *string
+}
+
+type UpdateLibraryResp struct {
+	Library model.Library
+}

@@ -20,6 +20,11 @@ func NewAdminService(ctx context.Context) *service {
 // UpdateCredits
 // 1. increment credits value in credits table for the entity
 func (s *service) UpdateCredits(ctx context.Context, req UpdateCreditsReq) (resp UpdateCreditsResp, err error) {
+	userId := utils.GetUserIdFromContext(ctx)
+	if userId == "" {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+
 	tx := environment.GetDbConn(ctx).Begin()
 	defer func() {
 		if err != nil {
@@ -28,6 +33,10 @@ func (s *service) UpdateCredits(ctx context.Context, req UpdateCreditsReq) (resp
 			tx.Commit()
 		}
 	}()
+
+	if req.MemberId == "" {
+		return resp, fmt.Errorf("member id is required to update credits")
+	}
 
 	err = model.UpdateCredits(tx, model.UpdateCreditsReq{
 		EntityId:    req.MemberId,
@@ -56,6 +65,11 @@ func (s *service) UpdateCredits(ctx context.Context, req UpdateCreditsReq) (resp
 // CreateLibrary
 // 1. create a library entry in library table
 func (s *service) CreateLibrary(ctx context.Context, req CreateLibraryReq) (resp CreateLibraryResp, err error) {
+	userType := utils.GetUserRoleFromContext(ctx)
+	if userType != constants.UserTypeSuperUser {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+
 	tx := environment.GetDbConn(ctx).Begin()
 	defer func() {
 		if err != nil {
@@ -91,6 +105,11 @@ func (s *service) CreateLibrary(ctx context.Context, req CreateLibraryReq) (resp
 // DeleteLibrary
 // 1. delete a library entry in library table
 func (s *service) DeleteLibrary(ctx context.Context, req DeleteLibraryReq) (resp DeleteLibraryResp, err error) {
+	userType := utils.GetUserRoleFromContext(ctx)
+	if userType != constants.UserTypeSuperUser {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+
 	tx := environment.GetDbConn(ctx).Begin()
 	defer func() {
 		if err != nil {
@@ -110,6 +129,11 @@ func (s *service) DeleteLibrary(ctx context.Context, req DeleteLibraryReq) (resp
 // GetLibraries
 // 1. fetch libraries from library table
 func (s *service) GetLibraries(ctx context.Context, req GetLibrariesReq) (resp GetLibrariesResp, err error) {
+	userId := utils.GetUserIdFromContext(ctx)
+	if userId == "" {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+
 	libraryIds := []uint32{}
 	if req.LibraryId != 0 {
 		libraryIds = append(libraryIds, req.LibraryId)
@@ -188,9 +212,34 @@ func (s *service) GetLibraries(ctx context.Context, req GetLibrariesReq) (resp G
 // AddAdminLibMapping
 // 1. add mapping between admin user and library
 func (s *service) AddAdminLibMapping(ctx context.Context, req AddAdminLibMappingReq) (resp AddAdminLibMappingResp, err error) {
+	userRole := utils.GetUserRoleFromContext(ctx)
+	if userRole != constants.UserTypeSuperUser {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+
 	err = model.AddAdminLibMapping(environment.GetDbConn(ctx), model.AddAdminLibMappingReq{
 		MemberId:  req.MemberId,
 		LibraryId: req.LibraryId,
 	})
+	return resp, err
+}
+
+// UpdateLibrary
+// 1. update library details
+func (s *service) UpdateLibrary(ctx context.Context, req UpdateLibraryReq) (resp UpdateLibraryResp, err error) {
+	userType := utils.GetUserRoleFromContext(ctx)
+	if userType != constants.UserTypeSuperUser {
+		return resp, fmt.Errorf("unauthorized access to user details")
+	}
+
+	err = model.UpdateLibrary(environment.GetDbConn(ctx), model.UpdateLibraryReq{
+		Id:        req.Id,
+		Name:      req.Name,
+		Latitude:  req.Latitude,
+		Longitude: req.Longitude,
+		Address:   req.Address,
+		Status:    req.Status,
+	})
+
 	return resp, err
 }

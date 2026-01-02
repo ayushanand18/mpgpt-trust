@@ -44,8 +44,8 @@ export function UserEditDialog({ user, open, onClose, onSave }: UserEditDialogPr
             <Label htmlFor="name">Name</Label>
             <Input
               id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={formData.Name}
+              onChange={(e) => setFormData({ ...formData, Name: e.target.value })}
             />
           </div>
           <div className="grid gap-2">
@@ -53,39 +53,30 @@ export function UserEditDialog({ user, open, onClose, onSave }: UserEditDialogPr
             <Input
               id="email"
               type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              value={formData.Email}
+              onChange={(e) => setFormData({ ...formData, Email: e.target.value })}
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="phone">Phone Number</Label>
             <Input
               id="phone"
-              value={formData.phoneNumber}
-              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+              value={formData.PhoneNumber}
+              onChange={(e) => setFormData({ ...formData, PhoneNumber: e.target.value })}
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="credits">Credits</Label>
-            <Input
-              id="credits"
-              type="number"
-              value={formData.credits}
-              onChange={(e) => setFormData({ ...formData, credits: Number.parseInt(e.target.value) })}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status">Role</Label>
             <Select
-              value={formData.status}
-              onValueChange={(value: "active" | "inactive") => setFormData({ ...formData, status: value })}
+              value={formData.Role}
+              onValueChange={(value: "member" | "admin") => setFormData({ ...formData, Role: value })}
             >
               <SelectTrigger id="status">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="member">Student</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>
             </Select>
           </div>

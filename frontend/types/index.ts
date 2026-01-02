@@ -6,6 +6,7 @@ export interface User {
   PhoneNumber: string
   CreatedAt: string
   Credits: number
+  Role: string
 }
 
 export interface Library {

@@ -8,15 +8,16 @@ import (
 )
 
 type User struct {
-	Id          string    `gorm:"column:id;primaryKey"`
-	Name        string    `gorm:"column:name"`
-	UserName    string    `gorm:"column:username"`
-	Role        string    `gorm:"column:role"`
-	MemberId    string    `gorm:"column:member_id"`
-	Email       string    `gorm:"column:email"`
-	PhoneNumber string    `gorm:"column:phone_number"`
-	UpdatedAt   time.Time `gorm:"column:updated_at"`
-	CreatedAt   time.Time `gorm:"column:created_at"`
+	Id             string    `gorm:"column:id;primaryKey"`
+	Name           string    `gorm:"column:name"`
+	UserName       string    `gorm:"column:username"`
+	Role           string    `gorm:"column:role"`
+	MemberId       string    `gorm:"column:member_id"`
+	Email          string    `gorm:"column:email"`
+	PhoneNumber    string    `gorm:"column:phone_number"`
+	UpdatedAt      time.Time `gorm:"column:updated_at"`
+	CreatedAt      time.Time `gorm:"column:created_at"`
+	CurrentCredits float64   `gorm:"-"`
 }
 
 func (b User) TableName() string {
