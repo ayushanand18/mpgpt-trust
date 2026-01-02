@@ -10,7 +10,7 @@ import { Calendar } from "lucide-react"
 
 interface BookingFiltersProps {
   libraries: Library[]
-  onFilter: (libraryId: string, startDate: string, endDate: string) => void
+  onFilter: (libraryId: number, startDate: string, endDate: string) => void
 }
 
 export function BookingFilters({ libraries, onFilter }: BookingFiltersProps) {
@@ -20,7 +20,7 @@ export function BookingFilters({ libraries, onFilter }: BookingFiltersProps) {
 
   const handleFilter = () => {
     if (selectedLibrary && startDate && endDate) {
-      onFilter(selectedLibrary, startDate, endDate)
+      onFilter(Number(selectedLibrary), startDate, endDate)
     }
   }
 
@@ -34,7 +34,7 @@ export function BookingFilters({ libraries, onFilter }: BookingFiltersProps) {
           </SelectTrigger>
           <SelectContent>
             {libraries.map((library) => (
-              <SelectItem key={library.id} value={library.id}>
+              <SelectItem key={library.id} value={library.id.toString()}>
                 {library.name}
               </SelectItem>
             ))}

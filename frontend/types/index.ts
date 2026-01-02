@@ -4,6 +4,8 @@ export interface User {
   Name: string
   Email: string
   PhoneNumber: string
+  CreatedAt: string
+  Credits: number
 }
 
 export interface Library {
@@ -20,7 +22,7 @@ export interface Library {
 export interface Booking {
   id: string
   userId: string
-  libraryId: string
+  libraryId: number
   userName: string
   startTime: string
   endTime: string

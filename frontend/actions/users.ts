@@ -91,3 +91,45 @@ export async function editUser(editData: any) {
   const respJson = await res.json()
   return respJson.Data
 }
+
+export async function searchUsers(searchType: string, searchValue: string) {
+  const { data: { session }, error } = await supabase.auth.getSession()
+
+  if (!session || error) {
+    throw new Error('No active session found')
+  }
+
+  let searchQuery: any = {}
+  switch (searchType) {
+    case 'memberId':
+      searchQuery['MemberIds'] = [searchValue]
+      break
+    case 'email':
+      searchQuery['Emails'] = [searchValue]
+      break
+    case 'phoneNumber':
+      searchQuery['PhoneNumbers'] = [searchValue]
+      break
+    default:
+      throw new Error(`Invalid search type: ${searchType}`)
+  }
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/users`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(searchQuery)
+    }
+  )
+
+  if (!res.ok) {
+    throw new Error(`Failed to search users: ${res.status}`)
+  }
+
+  const respJson = await res.json()
+  return respJson.Data
+}

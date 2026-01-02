@@ -150,45 +150,6 @@ export function UserProfile({userDataProp}: {userDataProp?: UserProfileData}) {
                 <Label htmlFor="memberId">Member ID</Label>
                 <p className="text-muted-foreground font-mono text-sm">{userDataProp?.userData.memberId}</p>
               </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="address">Address</Label>
-                {isEditing ? (
-                  <Input
-                    id="address"
-                    value={editData.address}
-                    onChange={(e) => setEditData({ ...editData, address: e.target.value })}
-                  />
-                ) : (
-                  <p className="text-foreground font-medium">{userDataProp?.userData.address}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                {isEditing ? (
-                  <Input
-                    id="city"
-                    value={editData.city}
-                    onChange={(e) => setEditData({ ...editData, city: e.target.value })}
-                  />
-                ) : (
-                  <p className="text-foreground font-medium">{userDataProp?.userData.city}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="zipCode">ZIP Code</Label>
-                {isEditing ? (
-                  <Input
-                    id="zipCode"
-                    value={editData.zipCode}
-                    onChange={(e) => setEditData({ ...editData, zipCode: e.target.value })}
-                  />
-                ) : (
-                  <p className="text-foreground font-medium">{userDataProp?.userData.zipCode}</p>
-                )}
-              </div>
             </div>
           </CardContent>
         </Card>)}

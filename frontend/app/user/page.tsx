@@ -9,6 +9,7 @@ import { User, Calendar, Wallet } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { getUser } from "@/actions/users"
 import { CreateUserAccount } from "@/components/user/create-account"
+import { Button } from "@/components/ui/button"
 import { UserData } from "@/types/index"
 
 export default function UserPanelPage() {
@@ -59,52 +60,66 @@ export default function UserPanelPage() {
             </p>
           </div>
 
-          <button
-            onClick={async () => {
-              await fetch('/auth/logout', { method: 'GET' })
-              window.location.href = '/'
-            }}
-            className="text-sm font-medium text-red-600 hover:text-red-700 border border-red-600 px-4 py-2 rounded cursor-pointer"
-          >
-            Logout
-          </button>
+          <div>
+            <Button
+              onClick={async () => {
+                window.location.href = '/'
+              }}
+              variant={"ghost"}
+              className="cursor-pointer"
+            >
+              Home
+            </Button>
+
+            <Button
+              onClick={async () => {
+                await fetch('/auth/logout', { method: 'GET' })
+                window.location.href = '/'
+              }}
+              variant={"default"}
+              className="cursor-pointer"
+            >
+              Logout
+            </Button>
+          </div>
         </div>
+
 
       </header>
 
       <main className="container mx-auto px-4 py-8">
         {userData && userData.id?.length > 0 && (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Profile</span>
-            </TabsTrigger>
-            <TabsTrigger value="bookings" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Bookings</span>
-            </TabsTrigger>
-            <TabsTrigger value="credits" className="flex items-center gap-2">
-              <Wallet className="h-4 w-4" />
-              <span className="hidden sm:inline">Credits</span>
-            </TabsTrigger>
-          </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-8">
+              <TabsTrigger value="profile" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">Profile</span>
+              </TabsTrigger>
+              <TabsTrigger value="bookings" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span className="hidden sm:inline">Bookings</span>
+              </TabsTrigger>
+              <TabsTrigger value="credits" className="flex items-center gap-2">
+                <Wallet className="h-4 w-4" />
+                <span className="hidden sm:inline">Credits</span>
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="profile">
-            <UserProfile userDataProp={{ userData, setUserData }} />
-          </TabsContent>
+            <TabsContent value="profile">
+              <UserProfile userDataProp={{ userData, setUserData }} />
+            </TabsContent>
 
-          <TabsContent value="bookings">
-            <BookingManager />
-          </TabsContent>
+            <TabsContent value="bookings">
+              <BookingManager />
+            </TabsContent>
 
-          <TabsContent value="credits">
-            <CreditsManager />
-          </TabsContent>
-        </Tabs>)}
+            <TabsContent value="credits">
+              <CreditsManager />
+            </TabsContent>
+          </Tabs>)}
 
         {userData && userData.id?.length <= 0 && (
-        <CreateUserAccount />)}
+          <CreateUserAccount />)}
 
         {!userData && (<div>Loading</div>)}
       </main>

@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import type { User, Library, Booking } from "@/types"
-import { demoUsers, demoLibraries, demoBookings } from "@/lib/demo-data"
 import { UserSearch } from "@/components/admin/user-search"
 import { UserDetailsCard } from "@/components/admin/user-details-card"
 import { UserEditDialog } from "@/components/admin/user-edit-dialog"
@@ -15,11 +14,12 @@ import { BookingsTable } from "@/components/admin/bookings-table"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, LibraryIcon, Calendar } from "lucide-react"
+import { searchUsers } from "@/actions/users"
 
 export default function Home() {
-  const [users, setUsers] = useState<User[]>(demoUsers)
-  const [libraries, setLibraries] = useState<Library[]>(demoLibraries)
-  const [bookings] = useState<Booking[]>(demoBookings)
+  const [users, setUsers] = useState<User[]>([])
+  const [libraries, setLibraries] = useState<Library[]>([])
+  const [bookings] = useState<Booking[]>([])
   const [searchResults, setSearchResults] = useState<User[]>([])
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [creditsUser, setCreditsUser] = useState<User | null>(null)
@@ -31,30 +31,33 @@ export default function Home() {
   const [hasFilteredBookings, setHasFilteredBookings] = useState(false)
 
   const handleSearch = (searchType: string, searchValue: string) => {
-    const results = users.filter((user) => {
-      const value = searchValue.toLowerCase()
-      if (searchType === "memberId") {
-        return user.memberId.toLowerCase().includes(value)
-      } else if (searchType === "email") {
-        return user.email.toLowerCase().includes(value)
-      } else if (searchType === "phoneNumber") {
-        return user.phoneNumber.toLowerCase().includes(value)
-      }
-      return false
+    searchUsers(searchType, searchValue).then((results) => {
+      setSearchResults(results.Users?.map((u: any) => ({
+        Id: u.Id,
+        Name: u.Name,
+        Email: u.Email,
+        PhoneNumber: u.PhoneNumber,
+        MemberId: u.MemberId,
+        UserName: u.UserName,
+        CreatedAt: u.CreatedAt,
+      })) || [])
+      setHasSearched(true)
+    }).catch((error: Error) => {
+      console.error("Error searching users:", error)
+      setSearchResults([])
+      setHasSearched(true)
     })
-    setSearchResults(results)
-    setHasSearched(true)
   }
 
   const handleEditUser = (updatedUser: User) => {
-    setUsers(users.map((user) => (user.id === updatedUser.id ? updatedUser : user)))
-    setSearchResults(searchResults.map((user) => (user.id === updatedUser.id ? updatedUser : user)))
+    setUsers(users.map((user) => (user.Id === updatedUser.Id ? updatedUser : user)))
+    setSearchResults(searchResults.map((user) => (user.Id === updatedUser.Id ? updatedUser : user)))
   }
 
   const handleDeleteUser = (userId: string) => {
     if (confirm("Are you sure you want to delete this user?")) {
-      setUsers(users.filter((user) => user.id !== userId))
-      setSearchResults(searchResults.filter((user) => user.id !== userId))
+      setUsers(users.filter((user) => user.Id !== userId))
+      setSearchResults(searchResults.filter((user) => user.Id !== userId))
     }
   }
 
@@ -62,7 +65,7 @@ export default function Home() {
     if (creditsUser) {
       const updatedUser = {
         ...creditsUser,
-        credits: creditsUser.credits + amount,
+        Credits: creditsUser.Credits + amount,
       }
       handleEditUser(updatedUser)
     }
@@ -72,7 +75,7 @@ export default function Home() {
     setLibraries(libraries.map((lib) => (lib.id === updatedLibrary.id ? updatedLibrary : lib)))
   }
 
-  const handleFilterBookings = (libraryId: string, startDate: string, endDate: string) => {
+  const handleFilterBookings = (libraryId: number, startDate: string, endDate: string) => {
     const library = libraries.find((lib) => lib.id === libraryId)
     if (!library) return
 
@@ -107,15 +110,28 @@ export default function Home() {
             </p>
           </div>
 
-          <button
-            onClick={async () => {
-              await fetch('/auth/logout', { method: 'GET' })
-              window.location.href = '/'
-            }}
-            className="text-sm font-medium text-red-600 hover:text-red-700 border border-red-600 px-4 py-2 rounded cursor-pointer"
-          >
-            Logout
-          </button>
+          <div>
+            <Button
+              onClick={async () => {
+                window.location.href = '/'
+              }}
+              variant={"ghost"}
+              className="cursor-pointer"
+            >
+              Home
+            </Button>
+
+            <Button
+              onClick={async () => {
+                await fetch('/auth/logout', { method: 'GET' })
+                window.location.href = '/'
+              }}
+              variant={"default"}
+              className="cursor-pointer"
+            >
+              Logout
+            </Button>
+          </div>
         </div>
 
       </header>
@@ -155,7 +171,7 @@ export default function Home() {
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {searchResults.map((user) => (
-                      <div key={user.id} className="relative">
+                      <div key={user.Id} className="relative">
                         <UserDetailsCard user={user} onEdit={setEditingUser} onDelete={handleDeleteUser} />
                         <Button variant="secondary" className="w-full mt-2" onClick={() => setCreditsUser(user)}>
                           Add Credits
@@ -204,8 +220,8 @@ export default function Home() {
 
       <AddCreditsDialog
         open={!!creditsUser}
-        userName={creditsUser?.name || ""}
-        currentCredits={creditsUser?.credits || 0}
+        userName={creditsUser?.Name || ""}
+        currentCredits={creditsUser?.Credits || 0}
         onClose={() => setCreditsUser(null)}
         onAdd={handleAddCredits}
       />
