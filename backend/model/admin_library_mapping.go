@@ -34,10 +34,11 @@ func AddAdminLibMapping(tx *gorm.DB, req AddAdminLibMappingReq) error {
 }
 
 type GetAdminLibraryMappingsReq struct {
-	MemberId string
+	MemberId   string
+	LibraryIds []uint32
 }
 
-func GetAdminLibraryMappings(tx *gorm.DB, req GetAdminLibraryMappingsReq) ([]uint32, error) {
+func GetAdminLibraryMappings(tx *gorm.DB, req GetAdminLibraryMappingsReq) ([]AdminLibraryMapping, error) {
 	var mappings []AdminLibraryMapping
 	query := tx.Table(AdminLibraryMapping{}.TableName()).
 		Where("member_id = ?", req.MemberId)
@@ -46,10 +47,5 @@ func GetAdminLibraryMappings(tx *gorm.DB, req GetAdminLibraryMappingsReq) ([]uin
 		return nil, err
 	}
 
-	libraryIds := []uint32{}
-	for _, mapping := range mappings {
-		libraryIds = append(libraryIds, mapping.LibraryId)
-	}
-
-	return libraryIds, nil
+	return mappings, nil
 }

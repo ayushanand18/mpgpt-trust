@@ -10,6 +10,7 @@ type Library struct {
 	Address   string  `gorm:"column:address"`
 	Remarks   float64 `gorm:"column:remarks"`
 	Status    string  `gorm:"column:status"` // status: active, closed
+	Admins    []User  `gorm:"-"`
 }
 
 func (b Library) TableName() string {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { User, Library, Booking } from "@/types"
 import { UserSearch } from "@/components/admin/user-search"
 import { UserDetailsCard } from "@/components/admin/user-details-card"
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, LibraryIcon, Calendar } from "lucide-react"
 import { searchUsers } from "@/actions/users"
+import { fetchLibraries } from "@/actions/libraries"
 
 export default function Home() {
   const [users, setUsers] = useState<User[]>([])
@@ -96,6 +97,23 @@ export default function Home() {
     setSelectedLibraryName(library.name)
     setHasFilteredBookings(true)
   }
+
+  useEffect(() => {
+    fetchLibraries("").then((libs) => {
+      console.log("Fetched libraries:", libs)
+      setLibraries(libs?.Libraries?.map((lib: any) => ({
+        id: lib.Id,
+        name: lib.Name,
+        address: lib.Address,
+        latitude: lib.Latitude,
+        longitude: lib.Longitude,
+      })) || [])
+    }).catch((error: Error) => {
+      console.error("Error fetching libraries:", error)
+      setLibraries([])
+    })
+  }, [])
+    
 
   return (
     <div className="min-h-screen bg-background">

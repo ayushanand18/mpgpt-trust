@@ -14,9 +14,6 @@ export interface Library {
   address: string
   latitude: number
   longitude: number
-  capacity: number
-  openingHours: string
-  adminUsers: string[]
 }
 
 export interface Booking {

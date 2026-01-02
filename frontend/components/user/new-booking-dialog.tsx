@@ -38,9 +38,6 @@ export function NewBookingDialog({ open, onOpenChange }: { open: boolean; onOpen
         address: lib.Address,
         latitude: lib.Latitude,
         longitude: lib.Longitude,
-        capacity: lib.Capacity,
-        openingHours: lib.OpeningHours,
-        adminUsers: lib.AdminUsers,
       }))
     )
   }

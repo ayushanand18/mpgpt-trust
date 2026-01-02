@@ -22,7 +22,7 @@ export function ManageAdminsDialog({ library, open, onClose, onSave }: ManageAdm
 
   useEffect(() => {
     if (library) {
-      setAdmins([...library.adminUsers])
+      setAdmins([...[]])
     }
   }, [library])
 
@@ -39,7 +39,7 @@ export function ManageAdminsDialog({ library, open, onClose, onSave }: ManageAdm
 
   const handleSave = () => {
     if (library) {
-      onSave({ ...library, adminUsers: admins })
+      onSave({ ...library })
       onClose()
     }
   }

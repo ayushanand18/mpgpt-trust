@@ -3,6 +3,7 @@ package httpservice
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 
@@ -64,6 +65,7 @@ func AuthMiddleware() httptypes.HttpRequestMiddleware {
 	return func(ctx context.Context, req interface{}) (context.Context, interface{}, error) {
 		// perform auth checks here
 		// e.g., validate tokens, check user roles, etc.
+		log.Printf("Incoming request: %+v\n", req)
 		return ctx, req, nil
 	}
 }
