@@ -49,3 +49,20 @@ func UpdateCredits(tx *gorm.DB, req UpdateCreditsReq) error {
 
 	return nil
 }
+
+type GetCreditsReq struct {
+	EntityId   string
+	EntityType string
+}
+
+func GetCredits(tx *gorm.DB, req GetCreditsReq) (Credits, error) {
+	var credits Credits
+	query := tx.Table(Credits{}.TableName()).
+		Where("entity_id = ? AND entity_type = ?", req.EntityId, req.EntityType)
+
+	if err := query.First(&credits).Error; err != nil && err != gorm.ErrRecordNotFound {
+		return Credits{}, err
+	}
+
+	return credits, nil
+}

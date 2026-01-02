@@ -1,0 +1,3 @@
+quick: |
+	go build 
+	./backend

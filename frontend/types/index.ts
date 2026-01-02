@@ -7,7 +7,7 @@ export interface User {
 }
 
 export interface Library {
-  id: string
+  id: number
   name: string
   address: string
   latitude: number
@@ -37,4 +37,3 @@ export interface UserData {
   city: string
   zipCode: string
 }
-

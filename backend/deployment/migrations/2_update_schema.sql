@@ -30,3 +30,6 @@ CREATE INDEX idx_users_phone_number ON lms.users (phone_number);
 ALTER TABLE lms.users
 ADD CONSTRAINT users_id_not_empty
 CHECK (length(trim(id)) > 0);
+
+ALTER TABLE lms.bookings
+ADD COLUMN purpose TEXT;

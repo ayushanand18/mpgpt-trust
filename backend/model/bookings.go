@@ -8,13 +8,16 @@ import (
 )
 
 type Bookings struct {
-	Id        uint32    `gorm:"column:id;primaryKey"`
-	LibraryId uint32    `gorm:"column:library_id"`
-	MemberId  string    `gorm:"column:member_id"`
-	StartTime time.Time `gorm:"column:start_time"`
-	EndTime   time.Time `gorm:"column:end_time"`
-	Status    string    `gorm:"column:status"` // status: [active, cancelled]
-	CreatedAt time.Time `gorm:"column:created_at"`
+	Id             uint32    `gorm:"column:id;primaryKey"`
+	LibraryId      uint32    `gorm:"column:library_id"`
+	MemberId       string    `gorm:"column:member_id"`
+	StartTime      time.Time `gorm:"column:start_time"`
+	EndTime        time.Time `gorm:"column:end_time"`
+	Status         string    `gorm:"column:status"` // status: [active, cancelled]
+	CreatedAt      time.Time `gorm:"column:created_at"`
+	Purpose        string    `gorm:"column:purpose"`
+	LibraryName    string    `gorm:"-"`
+	LibraryAddress string    `gorm:"-"`
 }
 
 func (b Bookings) TableName() string {
@@ -60,6 +63,7 @@ type CreateBookingReq struct {
 	LibraryId uint32
 	StartTime time.Time
 	EndTime   time.Time
+	Reason    string
 }
 
 func CreateBooking(tx *gorm.DB, req CreateBookingReq) (Bookings, error) {
@@ -70,6 +74,7 @@ func CreateBooking(tx *gorm.DB, req CreateBookingReq) (Bookings, error) {
 		EndTime:   req.EndTime,
 		Status:    "active",
 		CreatedAt: utils.GetCurrentTimeInIst(),
+		Purpose:   req.Reason,
 	}
 
 	if err := tx.Table(Bookings{}.TableName()).Create(&booking).Error; err != nil {

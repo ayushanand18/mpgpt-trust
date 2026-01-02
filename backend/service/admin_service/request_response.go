@@ -33,7 +33,7 @@ type GetLibrariesReq struct {
 }
 
 type GetLibrariesResp struct {
-	Libararies []model.Library
+	Libraries []model.Library
 }
 
 type AddAdminLibMappingReq struct {

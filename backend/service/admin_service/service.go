@@ -35,6 +35,18 @@ func (s *service) UpdateCredits(ctx context.Context, req UpdateCreditsReq) (resp
 		UserType:    req.UserType,
 	})
 
+	// create credits history
+	err = model.CreateCreditsHistory(tx, model.CreditsHistory{
+		EntityId:   req.MemberId,
+		EntityType: "member",
+		Value:      req.CreditsAmount,
+		Comments:   fmt.Sprintf("Credits Added, Reason: %s", req.Comment),
+		Reason:     "Credits addition",
+	})
+	if err != nil {
+		return resp, err
+	}
+
 	return resp, err
 }
 
@@ -107,7 +119,7 @@ func (s *service) GetLibraries(ctx context.Context, req GetLibrariesReq) (resp G
 			return resp, err
 		}
 	}
-	resp.Libararies, err = model.GetLibraries(environment.GetDbConn(ctx), model.GetLibrariesReq{
+	resp.Libraries, err = model.GetLibraries(environment.GetDbConn(ctx), model.GetLibrariesReq{
 		LibraryName: req.LibraryName,
 		LibraryIds:  libraryIds,
 	})
