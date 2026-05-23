@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { fetchBookings } from "@/actions/bookings"
 import { handleApiError } from "@/lib/error-handler";
 
-type Booking = {
+type LocalBooking = {
   id: string
   libraryName: string
   location: string
@@ -24,24 +24,24 @@ type Booking = {
 
 export function BookingManager() {
   const [showNewBooking, setShowNewBooking] = useState(false)
-  const [bookings, setBookings] = useState<Booking[]>([
+  const [bookings, setBookings] = useState<LocalBooking[]>([
   ])
 
   useEffect(() => {
     fetchBookings().
       then((data) => {
-        setBookings(data?.Bookings?.map((booking: Booking) => ({
+        setBookings(data?.map((booking: any) => ({
           id: booking.Id ?? booking.id,
-          memberId: booking.MemberId ?? booking.member_id,
           libraryName: booking.LibraryName ?? booking.library_name ?? "Library",
           location: booking.LibraryAddress ?? booking.library_address ?? "-",
-          date: booking.StartTime ?? booking.start_time,
-          status: booking.Status ?? booking.status,
+          date: booking.StartTime ?? booking.start_time ?? "",
+          time: booking.StartTime ?? booking.start_time ?? "",
+          status: "upcoming", 
           purpose: booking.Purpose ?? booking.purpose ?? "",
-        })))
-            }).catch((error) => {
-        handleApiError(error, "Failed to load bookings. Please try again later.");
-      });
+        })) || [])
+      }).catch((error) => {
+        console.error("Error fetching bookings:", error)
+      })
   }, [])
   const handleCancelBooking = (bookingId: string) => {
     setBookings(
@@ -62,7 +62,7 @@ export function BookingManager() {
   const pastBookings = bookings.filter(b => new Date(b.date) < now)
 
 
-  const BookingCard = ({ booking }: { booking: Booking }) => (
+  const BookingCard = ({ booking }: { booking: LocalBooking }) => (
     <Card>
       <CardHeader>
         <div className="flex items-start justify-between">

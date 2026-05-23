@@ -3,7 +3,7 @@ import type { PaymentRequest } from "@/types"
 
 const supabase = createClient()
 
-function normalizePayment(payment: unknown): PaymentRequest {
+function normalizePayment(payment: any): PaymentRequest {
   return {
     id: payment.id,
     studentUserId: payment.student_user_id,
@@ -20,8 +20,8 @@ function normalizePayment(payment: unknown): PaymentRequest {
     creditsToAdd: Number(payment.credits_to_add ?? 0),
     reviewedBy: payment.reviewed_by ?? "",
     reviewedAt: payment.reviewed_at ?? "",
-    createdAt: payment.created_at,
-    updatedAt: payment.updated_at,
+    createdAt: payment.created_at ?? "",
+    updatedAt: payment.updated_at ?? "",
   }
 }
 

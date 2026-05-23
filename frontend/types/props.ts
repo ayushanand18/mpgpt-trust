@@ -1,4 +1,6 @@
+import type { UserData } from "./index";
+
 export interface UserProfileData {
-    userData: User;
-    setUserData: (data: User) => void;
+    userData: UserData;
+    setUserData: (data: UserData) => void;
 }

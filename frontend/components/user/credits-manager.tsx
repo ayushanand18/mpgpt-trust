@@ -72,7 +72,7 @@ export function CreditsManager() {
         fetchPayments(),
       ])
 
-      setCurrentBalance(Number(creditsData.CurrentCredits ?? creditsData.Credits ?? 0))
+      setCurrentBalance(Number(creditsData.CurrentCredits ?? 0))
       setTransactions(
         creditsData?.History?.map((item: any) => ({
           id: String(item.id ?? item.Id),
@@ -119,8 +119,7 @@ export function CreditsManager() {
       setFormState(initialFormState)
       setProofFile(null)
       setPaymentDialogOpen(false)
-      toast({
-        title: "Payment submitted",
+      toast.success("Payment submitted", {
         description: "Your payment proof is now pending review.",
       })
     } catch (error) {

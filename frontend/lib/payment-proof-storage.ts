@@ -128,7 +128,7 @@ x-amz-date:${amzDate}
   return fetch(params.url, {
     method: params.method,
     headers,
-    body: params.method === "HEAD" ? undefined : payloadBuffer,
+    body: params.method === "HEAD" ? undefined : (payloadBuffer as any),
   })
 }
 
@@ -167,7 +167,7 @@ function buildCanonicalQuery(params: Record<string, string>) {
 }
 
 function signRequest(params: {
-  method: "PUT" | "DELETE" | "GET"
+  method: "PUT" | "DELETE" | "GET" | "HEAD"
   pathname: string
   query: string
   canonicalHeaders: string

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { Library } from '@/lib/db-types'
+import { Library } from '@/types'
 import { getServerUser } from '@/lib/auth'
 import { ROLES } from '@/lib/constants'
 

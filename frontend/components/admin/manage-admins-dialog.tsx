@@ -35,8 +35,10 @@ export function ManageAdminsDialog({ library, open, onClose, onSave }: ManageAdm
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    if (library) {
-      setAdmins((library.admins ?? []).map((admin: { MemberId?: string; member_id?: string }) => admin.MemberId ?? admin.member_id))
+    if (library && Array.isArray(library.admins)) {
+      setAdmins(library.admins.map((admin: any) => 
+        (typeof admin === 'string' ? admin : (admin.MemberId ?? admin.member_id))
+      ).filter(Boolean) as string[])
     }
   }, [library])
 
@@ -54,7 +56,6 @@ export function ManageAdminsDialog({ library, open, onClose, onSave }: ManageAdm
           Email: data.Users[0].Email ?? data.Users[0].email,
           PhoneNumber: data.Users[0].PhoneNumber ?? data.Users[0].phone_number,
           MemberId: data.Users[0].MemberId ?? data.Users[0].member_id,
-          UserName: data.Users[0].UserName ?? data.Users[0].username,
           Role: data.Users[0].Role ?? data.Users[0].role,
           CreatedAt: data.Users[0].CreatedAt ?? data.Users[0].created_at,
           Credits: data.Users[0].Credits ?? data.Users[0].credits ?? 0,
