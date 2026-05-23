@@ -6,7 +6,7 @@ import { ROLES } from '@/lib/constants'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authUser = await getUserWithRole()
@@ -17,7 +17,7 @@ export async function GET(
       )
     }
 
-    const { id } = params
+    const { id } = await params
 
     // Users can only fetch their own data, admins/superuser can fetch any
     if (authUser.role !== ROLES.ADMIN && authUser.role !== ROLES.SUPERUSER && authUser.user.id !== id) {
@@ -53,7 +53,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authUser = await getUserWithRole()
@@ -64,7 +64,7 @@ export async function PATCH(
       )
     }
 
-    const { id } = params
+    const { id } = await params
 
     // Users can only update their own data, admins/superuser can update any
     if (authUser.role !== ROLES.ADMIN && authUser.role !== ROLES.SUPERUSER && authUser.user.id !== id) {
