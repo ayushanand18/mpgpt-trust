@@ -10,12 +10,11 @@ export async function fetchCredits() {
     }
 
     const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${session?.user.id}/credits`,
+        `/api/user/${session?.user.id}/credits`,
         {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${session?.access_token}`,
             },
         }
     )
@@ -36,12 +35,11 @@ export async function addCredits(user: User, amount: number, utrNumber: string, 
     }
 
     const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${user.Id}/credits`,
+        `/api/user/${user.Id}/credits`,
         {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${session?.access_token}`,
             },
             body: JSON.stringify({
                 CreditsAmount: amount,

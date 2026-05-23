@@ -10,16 +10,15 @@ export async function fetchLibraries(searchTerm: string, fetchAdmins: boolean = 
     }
 
     const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/libraries`,
+        `/api/libraries`,
         {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${session?.access_token}`,
             },
             body: JSON.stringify({
                 LibraryName: searchTerm,
-                FetchAdminMappings: fetchAdmins, 
+                FetchAdminMappings: fetchAdmins,
             })
         }
     )
@@ -43,18 +42,18 @@ export async function createBooking(libraryId: number, date: string, purpose: st
     const end = new Date(new Date(`${date}T00:00:00Z`).setUTCDate(new Date(`${date}T00:00:00Z`).getUTCDate() + 1)).toISOString()
 
     const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/booking`,
+        `/api/booking`,
         {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${session?.access_token}`,
             },
             body: JSON.stringify({
                 StartTime: start,
                 EndTime: end,
                 LibraryId: libraryId,
                 Purpose: purpose,
+                MemberId: session?.user.id,
             })
         }
     )
@@ -75,12 +74,11 @@ export async function addAdminLibMapping(libraryId: number, adminId: string) {
     }
 
     const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/library/admin`,
+        `/api/library/admin`,
         {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${session?.access_token}`,
             },
             body: JSON.stringify({
                 LibraryId: libraryId,
@@ -106,12 +104,11 @@ export async function editLibrary(library: Library) {
     }
 
     const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/library`,
+        `/api/library`,
         {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${session?.access_token}`,
             },
             body: JSON.stringify({
                 Id: library.id,

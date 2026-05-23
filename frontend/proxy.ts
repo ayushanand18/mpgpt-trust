@@ -1,5 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { sql } from '@/lib/db'
+import { ROLES } from '@/lib/constants'
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -51,32 +53,26 @@ export async function proxy(request: NextRequest) {
 
   if (user && (isAdminRoute || isUserRoute || isAuthRoute)) {
     try {
-      const { data } = await supabase.auth.getSession()
-      const token = data.session?.access_token
+      const userId = user.sub
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${user.sub}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
+      // Fetch user role directly from database
+      const result = await sql`
+        SELECT role FROM lms.users WHERE id = ${userId}
+      `
 
-      if (!res.ok) {
+      if (result.length === 0) {
         return NextResponse.redirect(new URL("/auth", request.url))
       }
 
-      const userData = (await res.json()) ?? {}
-      const role = userData.Data?.User?.Role
+      const role = result[0].role
 
-      if (role === "admin" && isUserRoute) {
+      if (role === ROLES.ADMIN && isUserRoute) {
         const url = request.nextUrl.clone()
         url.pathname = "/admin"
         return NextResponse.redirect(url)
       }
 
-      if (role !== "admin" && isAdminRoute) {
+      if (role !== ROLES.ADMIN && isAdminRoute) {
         const url = request.nextUrl.clone()
         url.pathname = "/user"
         return NextResponse.redirect(url)
@@ -84,7 +80,7 @@ export async function proxy(request: NextRequest) {
 
       if (isAuthRoute) {
         const url = request.nextUrl.clone()
-        url.pathname = role === "admin" || role === "superuser" ? "/admin" : "/user"
+        url.pathname = role === ROLES.ADMIN || role === ROLES.SUPERUSER ? "/admin" : "/user"
         return NextResponse.redirect(url)
       }
 
@@ -106,7 +102,7 @@ export async function proxy(request: NextRequest) {
   // 4. Finally:
   //    return myNewResponse
   // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
+  // of sync and terminate the user's session prematurely.
 
   return supabaseResponse
 }

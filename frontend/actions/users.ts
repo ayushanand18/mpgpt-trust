@@ -4,12 +4,11 @@ const supabase = createClient()
 
 export async function getUser(accessToken?: string, id?: string) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${id}`,
+    `/api/user/${id}`,
     {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
       },
     }
   )
@@ -32,12 +31,11 @@ export async function createUser() {
   }
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/user`,
+    `/api/user`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({
         Name: session.user.user_metadata.full_name || "Library User",
@@ -66,12 +64,11 @@ export async function editUser(editData: any) {
   }
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${session.user.id}`,
+    `/api/user/${session.user.id}`,
     {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({
         Name: editData.name ?? editData.Name ?? "Library User",
@@ -115,12 +112,11 @@ export async function searchUsers(searchType: string, searchValue: string) {
   }
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/users`,
+    `/api/users`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
       },
       body: JSON.stringify(searchQuery)
     }

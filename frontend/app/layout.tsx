@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Munshi Premchand Gramin Pustakalay",
-  description: "Digital Library Management System - under construction. Launching soon.",
+  description: "A library management system for student access, bookings, credits, and admin operations.",
   applicationName: "Munshi Premchand Gramin Pustakalay",
-  icons: 'library_logo_main.jpg'
+  icons: "library_logo_main.jpg",
 };
 
 export default function RootLayout({
@@ -26,9 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
       </body>
     </html>
