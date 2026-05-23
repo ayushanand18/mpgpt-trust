@@ -1,5 +1,9 @@
 packages:
   - .
+allowBuilds:
+  sharp: false
+  supabase: false
+  unrs-resolver: false
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
