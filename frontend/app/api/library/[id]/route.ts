@@ -4,11 +4,11 @@ import { Library } from '@/lib/db-types'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Public endpoint - no auth required
-    const { id } = params
+    const { id } = await params
 
     const result = await sql<Library[]>`
       SELECT * FROM lms.libraries WHERE id = ${id}
