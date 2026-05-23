@@ -15,7 +15,7 @@ export interface Library {
   address: string
   latitude: number
   longitude: number
-  admins: any[]
+  admins: string[]
 }
 
 export interface Booking {
@@ -37,4 +37,24 @@ export interface UserData {
   address: string
   city: string
   zipCode: string
+}
+
+export interface PaymentRequest {
+  id: string
+  studentUserId: string
+  studentMemberId: string
+  studentName: string
+  amountPaid: number
+  utrNumber: string
+  paymentDate: string
+  filePath: string
+  proofUrl: string | null
+  status: "auth_pending" | "approved" | "rejected"
+  studentNote: string
+  reviewComment: string
+  creditsToAdd: number
+  reviewedBy: string
+  reviewedAt: string
+  createdAt: string
+  updatedAt: string
 }

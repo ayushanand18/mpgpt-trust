@@ -7,13 +7,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Edit2, Save, X, CreditCard } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner";
 import type { UserProfileData } from "@/types/props"
 import { editUser } from "@/actions/users"
+import { handleApiError } from "@/lib/error-handler";
 
 
 export function UserProfile({userDataProp}: {userDataProp?: UserProfileData}) {
-  const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState(userDataProp?.userData)
 
@@ -21,17 +21,12 @@ export function UserProfile({userDataProp}: {userDataProp?: UserProfileData}) {
     userDataProp?.setUserData(editData)
 
     editUser(editData).then(() => {
-      toast({
-        title: "Profile updated",
+      toast.success("Profile updated", {
         description: "Your information has been saved successfully.",
       })
-    }).catch((error: Error) => {
-      console.error("Error updating profile:", error)
-      toast({
-        title: "Error updating profile",
-        description: "There was an error saving your information. Please try again later.",
-      })
-    })
+    }).catch((error) => {
+      handleApiError(error, "Error updating profile");
+    });
     
     setIsEditing(false)
   }

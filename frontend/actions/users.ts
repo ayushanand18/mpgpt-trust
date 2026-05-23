@@ -56,7 +56,7 @@ export async function createUser() {
   return respJson.Data
 }
 
-export async function editUser(editData: any) {
+export async function editUser(editData: Partial<User>) {
   const { data: { session }, error } = await supabase.auth.getSession()
 
   if (!session || error) {
@@ -96,7 +96,7 @@ export async function searchUsers(searchType: string, searchValue: string) {
     throw new Error('No active session found')
   }
 
-  let searchQuery: any = {}
+  const searchQuery: { [key: string]: string[] } = {};
   switch (searchType) {
     case 'memberId':
       searchQuery['MemberIds'] = [searchValue]

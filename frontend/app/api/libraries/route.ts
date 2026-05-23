@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { Library } from '@/lib/db-types'
 import { getServerUser } from '@/lib/auth'
+import { ROLES } from '@/lib/constants'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,18 +25,19 @@ export async function POST(request: NextRequest) {
 
     const libraries = await query
 
-    let result = libraries
+    const result = libraries
 
     if (FetchAdminMappings) {
-      // Fetch admin mappings for each library
+      // Fetch admin mappings for each library, ensuring the users still have admin roles
       for (const library of libraries) {
         const admins = await sql`
-          SELECT alm.member_id, u.name, u.email
-          FROM lms.admin_library_mapping alm
-          LEFT JOIN lms.users u ON alm.member_id = u.member_id
+          SELECT alm.member_id 
+          FROM lms.admin_library_mapping alm 
+          JOIN lms.users u ON alm.member_id = u.member_id
           WHERE alm.library_id = ${library.id}
+          AND (u.role = ${ROLES.ADMIN} OR u.role = ${ROLES.SUPERUSER})
         `
-        ;(library as any).admins = admins
+        ;(library as Library).admins = admins.map((a: any) => a.member_id);
       }
     }
 

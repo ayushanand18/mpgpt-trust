@@ -16,31 +16,42 @@ export default function UserPanelPage() {
   const supabase = createClient()
   const [activeTab, setActiveTab] = useState("profile")
   const [userData, setUserData] = useState<UserData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const { data, error } = await supabase.auth.getSession()
+      try {
+        const { data, error } = await supabase.auth.getSession()
 
-      if (error) {
-        console.error('Error fetching user data:', error.message)
-        return
-      }
+        if (error) {
+          console.error('Error fetching user data:', error.message)
+          return
+        }
 
-      if (data) {
-        const user = await getUser(data.session?.access_token, data.session!.user.id)
+        const sessionUser = data.session?.user
+        if (!sessionUser) {
+          return
+        }
+
+        const user = await getUser(data.session?.access_token, sessionUser.id)
+        const apiUser = user.User
 
         const userD = {
-          id: user.User.Id,
-          email: user.User.Email,
-          phone: user.User.PhoneNumber,
-          name: user.User.Name,
-          memberId: user.User.MemberId,
+          id: apiUser.id ?? apiUser.Id ?? "",
+          email: apiUser.email ?? apiUser.Email ?? "",
+          phone: apiUser.phone_number ?? apiUser.PhoneNumber ?? "",
+          name: apiUser.name ?? apiUser.Name ?? "",
+          memberId: apiUser.member_id ?? apiUser.MemberId ?? "",
           address: "",
           city: "",
           zipCode: "",
         }
 
         setUserData(userD)
+      } catch (fetchError) {
+        console.error('Error loading dashboard user:', fetchError)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -88,7 +99,7 @@ export default function UserPanelPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {userData && userData.id?.length > 0 && (
+        {userData?.id && (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-8">
               <TabsTrigger value="profile" className="flex items-center gap-2">
@@ -118,10 +129,10 @@ export default function UserPanelPage() {
             </TabsContent>
           </Tabs>)}
 
-        {userData && userData.id?.length <= 0 && (
+        {!isLoading && !userData?.id && (
           <CreateUserAccount />)}
 
-        {!userData && (<div>Loading</div>)}
+        {isLoading && (<div>Loading</div>)}
       </main>
     </div>
   )

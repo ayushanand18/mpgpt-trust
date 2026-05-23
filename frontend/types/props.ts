@@ -1,4 +1,4 @@
 export interface UserProfileData {
-    userData: any;
-    setUserData: (data: any) => void;
+    userData: User;
+    setUserData: (data: User) => void;
 }

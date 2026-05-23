@@ -16,44 +16,56 @@ interface LibraryEditDialogProps {
 }
 
 export function LibraryEditDialog({ library, open, onClose, onSave }: LibraryEditDialogProps) {
-  const [formData, setFormData] = useState<Library | null>(null)
+  const [formData, setFormData] = useState<Partial<Library>>({
+    name: "",
+    address: "",
+    latitude: 0,
+    longitude: 0,
+  })
 
   useEffect(() => {
     if (library) {
       setFormData({ ...library })
+    } else {
+      setFormData({
+        name: "",
+        address: "",
+        latitude: 0,
+        longitude: 0,
+      })
     }
-  }, [library])
+  }, [library, open])
 
   const handleSave = () => {
-    if (formData) {
-      onSave(formData)
+    if (formData.name && formData.address) {
+      onSave(formData as Library)
       onClose()
     }
   }
-
-  if (!formData) return null
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Library Information</DialogTitle>
+          <DialogTitle>{library ? "Edit Library Information" : "Create New Library"}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="name">Library Name</Label>
             <Input
               id="name"
-              value={formData.name}
+              value={formData.name || ""}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g. Downtown Branch"
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="address">Address</Label>
             <Textarea
               id="address"
-              value={formData.address}
+              value={formData.address || ""}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              placeholder="Full street address"
               rows={2}
             />
           </div>
@@ -64,8 +76,8 @@ export function LibraryEditDialog({ library, open, onClose, onSave }: LibraryEdi
                 id="latitude"
                 type="number"
                 step="0.0001"
-                value={formData.latitude}
-                onChange={(e) => setFormData({ ...formData, latitude: Number.parseFloat(e.target.value) })}
+                value={formData.latitude || 0}
+                onChange={(e) => setFormData({ ...formData, latitude: Number.parseFloat(e.target.value) || 0 })}
               />
             </div>
             <div className="grid gap-2">
@@ -74,8 +86,8 @@ export function LibraryEditDialog({ library, open, onClose, onSave }: LibraryEdi
                 id="longitude"
                 type="number"
                 step="0.0001"
-                value={formData.longitude}
-                onChange={(e) => setFormData({ ...formData, longitude: Number.parseFloat(e.target.value) })}
+                value={formData.longitude || 0}
+                onChange={(e) => setFormData({ ...formData, longitude: Number.parseFloat(e.target.value) || 0 })}
               />
             </div>
           </div>
@@ -84,9 +96,12 @@ export function LibraryEditDialog({ library, open, onClose, onSave }: LibraryEdi
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Changes</Button>
+          <Button onClick={handleSave} disabled={!formData.name || !formData.address}>
+            {library ? "Save Changes" : "Create Library"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
+

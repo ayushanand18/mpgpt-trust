@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface UserSearchProps {
   onSearch: (searchType: string, searchValue: string) => void
+  disabled?: boolean
 }
 
-export function UserSearch({ onSearch }: UserSearchProps) {
+export function UserSearch({ onSearch, disabled }: UserSearchProps) {
   const [searchType, setSearchType] = useState("memberId")
   const [searchValue, setSearchValue] = useState("")
 
@@ -22,7 +23,7 @@ export function UserSearch({ onSearch }: UserSearchProps) {
 
   return (
     <div className="flex gap-3">
-      <Select value={searchType} onValueChange={setSearchType}>
+      <Select value={searchType} onValueChange={setSearchType} disabled={disabled}>
         <SelectTrigger className="w-48">
           <SelectValue />
         </SelectTrigger>
@@ -38,10 +39,10 @@ export function UserSearch({ onSearch }: UserSearchProps) {
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+          disabled={disabled}
         />
-        <Button onClick={handleSearch}>
-          <Search className="h-4 w-4 mr-2" />
-          Search
+        <Button onClick={handleSearch} disabled={disabled}>
+          {disabled ? "Searching..." : <><Search className="h-4 w-4 mr-2" /> Search</>}
         </Button>
       </div>
     </div>

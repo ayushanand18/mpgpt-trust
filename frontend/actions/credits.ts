@@ -3,7 +3,7 @@ import { User } from "@/types"
 
 const supabase = createClient()
 
-export async function fetchCredits() {
+export async function fetchCredits(): Promise<{ CurrentCredits: number, History: unknown[] }> {
     const { data: { session }, error } = await supabase.auth.getSession()
     if (error) {
         throw new Error('No active session found')
