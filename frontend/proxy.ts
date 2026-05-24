@@ -66,13 +66,13 @@ export async function proxy(request: NextRequest) {
 
       const role = result[0].role
 
-      if (role === ROLES.ADMIN && isUserRoute) {
+      if ((role === ROLES.ADMIN || role === ROLES.SUPERUSER) && isUserRoute) {
         const url = request.nextUrl.clone()
         url.pathname = "/admin"
         return NextResponse.redirect(url)
       }
 
-      if (role !== ROLES.ADMIN && isAdminRoute) {
+      if (role !== ROLES.ADMIN && role !== ROLES.SUPERUSER && isAdminRoute) {
         const url = request.nextUrl.clone()
         url.pathname = "/user"
         return NextResponse.redirect(url)

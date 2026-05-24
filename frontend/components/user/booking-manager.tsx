@@ -8,10 +8,11 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, Clock, MapPin, Plus, X } from "lucide-react"
 import { NewBookingDialog } from "@/components/user/new-booking-dialog"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner";
 import { fetchBookings } from "@/actions/bookings"
+import { handleApiError } from "@/lib/error-handler";
 
-type Booking = {
+type LocalBooking = {
   id: string
   libraryName: string
   location: string
@@ -22,38 +23,31 @@ type Booking = {
 }
 
 export function BookingManager() {
-  const { toast } = useToast()
   const [showNewBooking, setShowNewBooking] = useState(false)
-  const [bookings, setBookings] = useState<Booking[]>([
+  const [bookings, setBookings] = useState<LocalBooking[]>([
   ])
 
   useEffect(() => {
     fetchBookings().
       then((data) => {
-        setBookings(data?.Bookings?.map((booking: any) => ({
-          id: booking.Id,
-          memberId: booking.MemberId,
-          libraryName: booking.LibraryName,
-          location: booking.LibraryAddress,
-          date: booking.StartTime,
-          status: booking.Status,
-          purpose: booking.Purpose,
-        })))
-      }).
-      catch((error) => {
+        setBookings(data?.map((booking: any) => ({
+          id: booking.Id ?? booking.id,
+          libraryName: booking.LibraryName ?? booking.library_name ?? "Library",
+          location: booking.LibraryAddress ?? booking.library_address ?? "-",
+          date: booking.StartTime ?? booking.start_time ?? "",
+          time: booking.StartTime ?? booking.start_time ?? "",
+          status: "upcoming", 
+          purpose: booking.Purpose ?? booking.purpose ?? "",
+        })) || [])
+      }).catch((error) => {
         console.error("Error fetching bookings:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load bookings. Please try again later.",
-        })
       })
   }, [])
   const handleCancelBooking = (bookingId: string) => {
     setBookings(
       bookings.map((booking) => (booking.id === bookingId ? { ...booking, status: "cancelled" as const } : booking)),
     )
-    toast({
-      title: "Booking cancelled",
+    toast.success("Booking cancelled", {
       description: "Your booking has been cancelled successfully.",
     })
   }
@@ -68,7 +62,7 @@ export function BookingManager() {
   const pastBookings = bookings.filter(b => new Date(b.date) < now)
 
 
-  const BookingCard = ({ booking }: { booking: Booking }) => (
+  const BookingCard = ({ booking }: { booking: LocalBooking }) => (
     <Card>
       <CardHeader>
         <div className="flex items-start justify-between">

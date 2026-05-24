@@ -9,13 +9,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Search, MapPin, Calendar, Clock } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner";
 import { Library } from "@/types"
 import { createBooking, fetchLibraries } from "@/actions/libraries"
 import { useDebounce } from "@/hooks/use-debounce"
+import { handleApiError } from "@/lib/error-handler";
 
 export function NewBookingDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-  const { toast } = useToast()
   const [searchTerm, setSearchTerm] = useState("")
   const debouncedSearchTerm = useDebounce(searchTerm)
   const [selectedLibrary, setSelectedLibrary] = useState<Library | null>(null)
@@ -33,11 +33,11 @@ export function NewBookingDialog({ open, onOpenChange }: { open: boolean; onOpen
 
     setLibraries(
       librariesData?.Libraries?.map((lib: any): Library => ({
-        id: lib.Id,
-        name: lib.Name,
-        address: lib.Address,
-        latitude: lib.Latitude,
-        longitude: lib.Longitude,
+        id: lib.Id ?? lib.id,
+        name: lib.Name ?? lib.name,
+        address: lib.Address ?? lib.address,
+        latitude: lib.Latitude ?? lib.latitude,
+        longitude: lib.Longitude ?? lib.longitude,
         admins: []
       }))
     )
@@ -45,16 +45,14 @@ export function NewBookingDialog({ open, onOpenChange }: { open: boolean; onOpen
 
   const handleSubmit = () => {
     if (!selectedLibrary || !selectedDate || !purpose) {
-      toast({
-        title: "Missing information",
+      toast.error("Missing information", {
         description: "Please fill in all required fields.",
       })
       return
     }
     
     createBooking(selectedLibrary.id, selectedDate, purpose).then(() => {
-      toast({
-        title: "Booking created",
+      toast.success("Booking created", {
         description: `Your booking at ${selectedLibrary.name} has been confirmed.`,
       })
       onOpenChange(false)
@@ -64,11 +62,8 @@ export function NewBookingDialog({ open, onOpenChange }: { open: boolean; onOpen
       setPurpose("")
       setSearchTerm("")
     }).catch((error) => {
-      toast({
-        title: "Error",
-        description: `Failed to create booking: ${error.message}`,
-      })
-    })
+      handleApiError(error, `Failed to create booking`);
+    });
   }
     
   return (

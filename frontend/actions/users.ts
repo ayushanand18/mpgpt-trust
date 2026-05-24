@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client"
+import type { User } from "@/types"
 
 const supabase = createClient()
 
@@ -56,7 +57,7 @@ export async function createUser() {
   return respJson.Data
 }
 
-export async function editUser(editData: any) {
+export async function editUser(editData: Partial<User>) {
   const { data: { session }, error } = await supabase.auth.getSession()
 
   if (!session || error) {
@@ -71,11 +72,11 @@ export async function editUser(editData: any) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        Name: editData.name ?? editData.Name ?? "Library User",
-        Email: editData.email ?? editData.Email ?? "",
-        PhoneNumber: editData.phone ?? editData.PhoneNumber ?? "",
-        Id: editData.id ?? editData?.Id ?? session.user.id,
-        MemberId: editData.memberId ?? editData.MemberId ?? "",
+        Name: editData.Name ?? "Library User",
+        Email: editData.Email ?? "",
+        PhoneNumber: editData.PhoneNumber ?? "",
+        Id: editData.Id ?? session.user.id,
+        MemberId: editData.MemberId ?? "",
         Role: editData.Role ?? "member",
       })
     },
@@ -96,7 +97,7 @@ export async function searchUsers(searchType: string, searchValue: string) {
     throw new Error('No active session found')
   }
 
-  let searchQuery: any = {}
+  const searchQuery: { [key: string]: string[] } = {};
   switch (searchType) {
     case 'memberId':
       searchQuery['MemberIds'] = [searchValue]

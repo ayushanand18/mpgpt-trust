@@ -25,19 +25,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { MemberIds, Emails, PhoneNumbers } = body
 
-    let query = sql<User[]>`SELECT * FROM lms.users WHERE 1=1`
-    const params: any[] = []
+    let query = sql<User[]>`
+      SELECT u.*, COALESCE(c.value, 0) as credits
+      FROM lms.users u
+      LEFT JOIN lms.credits c ON u.member_id = c.entity_id AND c.entity_type = 'member'
+      WHERE 1=1
+    `
+    const params: (string | string[])[] = []
 
     if (MemberIds && MemberIds.length > 0) {
-      query = sql<User[]>`${query} AND member_id = ANY(${MemberIds})`
+      query = sql<User[]>`${query} AND u.member_id = ANY(${MemberIds})`
     }
 
     if (Emails && Emails.length > 0) {
-      query = sql<User[]>`${query} AND email = ANY(${Emails})`
+      query = sql<User[]>`${query} AND u.email = ANY(${Emails})`
     }
 
     if (PhoneNumbers && PhoneNumbers.length > 0) {
-      query = sql<User[]>`${query} AND phone_number = ANY(${PhoneNumbers})`
+      query = sql<User[]>`${query} AND u.phone_number = ANY(${PhoneNumbers})`
     }
 
     const result = await query

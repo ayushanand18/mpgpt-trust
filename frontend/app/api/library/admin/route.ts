@@ -31,6 +31,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Verify that the user being assigned is actually an admin or superuser
+    const users = await sql`
+      SELECT role FROM lms.users WHERE member_id = ${MemberId}
+    `
+    if (users.length === 0) {
+      return NextResponse.json(
+        { Error: { Message: 'User not found' }, Data: null },
+        { status: 404 }
+      )
+    }
+
+    const targetUserRole = users[0].role
+    if (targetUserRole !== ROLES.ADMIN && targetUserRole !== ROLES.SUPERUSER) {
+      return NextResponse.json(
+        { Error: { Message: `User with member_id ${MemberId} is not an admin or superuser` }, Data: null },
+        { status: 400 }
+      )
+    }
+
     const result = await sql`
       INSERT INTO lms.admin_library_mapping (library_id, member_id)
       VALUES (${LibraryId}, ${MemberId})

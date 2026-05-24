@@ -67,3 +67,21 @@ export interface Counter {
   name: string
   value: bigint
 }
+
+export interface Payment {
+  id: string
+  student_user_id: string
+  student_member_id: string
+  amount_paid: number
+  utr_number: string
+  payment_date: string
+  file_path: string
+  status: string
+  student_note: string | null
+  review_comment: string | null
+  credits_to_add: number
+  reviewed_by: string | null
+  reviewed_at: Date | null
+  created_at: Date
+  updated_at: Date
+}

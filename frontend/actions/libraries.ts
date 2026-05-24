@@ -120,8 +120,37 @@ export async function editLibrary(library: Library) {
         }
     )
 
+    const respJson = await res.json()
+    return respJson.Data
+}
+
+export async function createLibrary(library: Partial<Library>) {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    if (error || !session) {
+        throw new Error('No active session found')
+    }
+
+    const res = await fetch(
+        `/api/library`,
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                Name: library.name,
+                Address: library.address,
+                Latitude: library.latitude,
+                Longitude: library.longitude,
+                Status: 'active',
+                Remarks: 0
+            })
+        }
+    )
+
     if (!res.ok) {
-        throw new Error(`Failed to edit library: ${res.status}`)
+        const errorData = await res.json().catch(() => ({}));
+        throw errorData;
     }
 
     const respJson = await res.json()

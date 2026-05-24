@@ -7,31 +7,38 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Edit2, Save, X, CreditCard } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner";
 import type { UserProfileData } from "@/types/props"
 import { editUser } from "@/actions/users"
+import { handleApiError } from "@/lib/error-handler";
+import type { User } from "@/types";
 
 
 export function UserProfile({userDataProp}: {userDataProp?: UserProfileData}) {
-  const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState(userDataProp?.userData)
 
   const handleSave = () => {
-    userDataProp?.setUserData(editData)
+    if (editData) {
+        userDataProp?.setUserData(editData)
+    }
 
-    editUser(editData).then(() => {
-      toast({
-        title: "Profile updated",
-        description: "Your information has been saved successfully.",
-      })
-    }).catch((error: Error) => {
-      console.error("Error updating profile:", error)
-      toast({
-        title: "Error updating profile",
-        description: "There was an error saving your information. Please try again later.",
-      })
-    })
+    if (editData) {
+        const userUpdate: Partial<User> = {
+            Name: editData.name,
+            Email: editData.email,
+            PhoneNumber: editData.phone,
+            Id: editData.id,
+            MemberId: editData.memberId,
+        }
+        editUser(userUpdate).then(() => {
+        toast.success("Profile updated", {
+            description: "Your information has been saved successfully.",
+        })
+        }).catch((error) => {
+        handleApiError(error, "Error updating profile");
+        });
+    }
     
     setIsEditing(false)
   }
@@ -110,8 +117,8 @@ export function UserProfile({userDataProp}: {userDataProp?: UserProfileData}) {
                 {isEditing ? (
                   <Input
                     id="name"
-                    value={editData.name}
-                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                    value={editData?.name ?? ""}
+                    onChange={(e) => setEditData(prev => prev ? ({ ...prev, name: e.target.value }) : undefined)}
                   />
                 ) : (
                   <p className="text-foreground font-medium">{userDataProp?.userData.name}</p>
@@ -124,8 +131,8 @@ export function UserProfile({userDataProp}: {userDataProp?: UserProfileData}) {
                   <Input
                     id="email"
                     type="email"
-                    value={editData.email}
-                    onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+                    value={editData?.email ?? ""}
+                    onChange={(e) => setEditData(prev => prev ? ({ ...prev, email: e.target.value }) : undefined)}
                   />
                 ) : (
                   <p className="text-foreground font-medium">{userDataProp?.userData.email}</p>
@@ -138,8 +145,8 @@ export function UserProfile({userDataProp}: {userDataProp?: UserProfileData}) {
                   <Input
                     id="phone"
                     type="tel"
-                    value={editData.phone}
-                    onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
+                    value={editData?.phone ?? ""}
+                    onChange={(e) => setEditData(prev => prev ? ({ ...prev, phone: e.target.value }) : undefined)}
                   />
                 ) : (
                   <p className="text-foreground font-medium">{userDataProp?.userData.phone}</p>

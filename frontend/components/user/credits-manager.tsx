@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { useEffect, useMemo, useState } from "react"
+import { fetchCredits } from "@/actions/credits"
+import { createPaymentRequest, fetchPayments } from "@/actions/payments"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Wallet, TrendingUp, TrendingDown, QrCode, Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -15,8 +14,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { toast } from "@/hooks/use-toast"
-import { fetchCredits } from "@/actions/credits"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner";
+import {
+  PAYMENT_CREDIT_RATE_LABEL,
+  PAYMENT_STATUSES,
+  calculateCreditsFromPayment,
+} from "@/lib/constants"
+import type { PaymentRequest } from "@/types"
+import { Plus, QrCode, TrendingDown, TrendingUp, Wallet } from "lucide-react"
+import { handleApiError } from "@/lib/error-handler";
 
 type Transaction = {
   id: string
@@ -26,32 +37,97 @@ type Transaction = {
   date: string
 }
 
+const initialFormState = {
+  amountPaid: "",
+  utrNumber: "",
+  paymentDate: "",
+  studentNote: "",
+}
+
+function formatStatus(status: PaymentRequest["status"]) {
+  if (status === PAYMENT_STATUSES.APPROVED) return "Approved"
+  if (status === PAYMENT_STATUSES.REJECTED) return "Rejected"
+  return "Pending"
+}
+
+function getStatusVariant(status: PaymentRequest["status"]): "default" | "destructive" | "secondary" {
+  if (status === PAYMENT_STATUSES.APPROVED) return "default"
+  if (status === PAYMENT_STATUSES.REJECTED) return "destructive"
+  return "secondary"
+}
+
 export function CreditsManager() {
   const [currentBalance, setCurrentBalance] = useState(0)
-  const [transactions, setTransactions] = useState<Transaction[]>([
-  ])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [payments, setPayments] = useState<PaymentRequest[]>([])
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
+  const [submittingPayment, setSubmittingPayment] = useState(false)
+  const [proofFile, setProofFile] = useState<File | null>(null)
+  const [formState, setFormState] = useState(initialFormState)
+
+  const loadData = async () => {
+    try {
+      const [creditsData, paymentData] = await Promise.all([
+        fetchCredits(),
+        fetchPayments(),
+      ])
+
+      setCurrentBalance(Number(creditsData.CurrentCredits ?? 0))
+      setTransactions(
+        creditsData?.History?.map((item: any) => ({
+          id: String(item.id ?? item.Id),
+          value: Number(item.value ?? item.Value),
+          description: String(item.reason ?? item.Reason ?? "Credit entry"),
+          comments: String(item.comments ?? item.Comments ?? ""),
+          date: String(item.created_at ?? item.CreatedAt),
+        })) || []
+      )
+      setPayments(paymentData)
+    } catch (error) {
+      handleApiError(error, "Unable to load credits");
+    }
+  }
 
   useEffect(() => {
-    fetchCredits().then((data) => {
-      setCurrentBalance(data.CurrentCredits)
-      setTransactions(data?.History?.map((item: any) => ({
-        id: item.Id,
-        value: item.Value,
-        description: item.Reason,
-        comments: item.Comments,
-        date: item.CreatedAt,
-      })) || [])
-    }).catch((error: Error) => {
-      console.error("Error fetching credits:", error)
-      toast({
-        title: "Error fetching credits",
-        description: "There was an error fetching your credit transactions. Please try again later.",
-      })
-    })
+    loadData()
   }, [])
 
   const creditTransactions = transactions.filter((t) => t.value > 0)
   const debitTransactions = transactions.filter((t) => t.value < 0)
+  const derivedCredits = useMemo(
+    () => calculateCreditsFromPayment(Number(formState.amountPaid || 0)),
+    [formState.amountPaid]
+  )
+
+  const handleSubmitPayment = async () => {
+    if (!proofFile) {
+      handleApiError("Upload the payment proof before submitting.", "Proof required");
+      return
+    }
+
+    const formData = new FormData()
+    formData.set("amountPaid", formState.amountPaid)
+    formData.set("utrNumber", formState.utrNumber)
+    formData.set("paymentDate", formState.paymentDate)
+    formData.set("studentNote", formState.studentNote)
+    formData.set("proof", proofFile)
+
+    try {
+      setSubmittingPayment(true)
+      const payment = await createPaymentRequest(formData)
+      setPayments((current) => [payment, ...current])
+      setFormState(initialFormState)
+      setProofFile(null)
+      setPaymentDialogOpen(false)
+      toast.success("Payment submitted", {
+        description: "Your payment proof is now pending review.",
+      })
+    } catch (error) {
+      handleApiError(error, "Submission failed");
+    } finally {
+      setSubmittingPayment(false)
+    }
+  }
 
   const TransactionCard = ({ transaction }: { transaction: Transaction }) => (
     <div className="flex items-center justify-between py-3">
@@ -72,11 +148,12 @@ export function CreditsManager() {
               year: "numeric",
             })}
           </p>
+          {transaction.comments && <p className="text-xs text-muted-foreground">{transaction.comments}</p>}
         </div>
       </div>
       <div className="text-right">
         <p className={`font-semibold ${transaction.value > 0 ? "text-chart-4" : "text-destructive"}`}>
-          {transaction.value > 0 ? "+" : "-"}${Math.abs(transaction.value)}
+          {transaction.value > 0 ? "+" : "-"}{Math.abs(transaction.value)} credits
         </p>
       </div>
     </div>
@@ -84,7 +161,6 @@ export function CreditsManager() {
 
   return (
     <div className="grid gap-6 md:grid-cols-3">
-      {/* Balance Card */}
       <Card className="md:col-span-3 bg-gradient-to-br from-chart-1 to-chart-2 text-white">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
@@ -96,28 +172,96 @@ export function CreditsManager() {
         <CardContent>
           <div className="space-y-4">
             <p className="text-5xl font-bold">{currentBalance}</p>
-            <Dialog>
+            <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="secondary" className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Credits
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="sm:max-w-xl">
                 <DialogHeader>
                   <DialogTitle>Add Credits via QR Code</DialogTitle>
-                  <DialogDescription>Scan this QR code with your payment app to add credits</DialogDescription>
+                  <DialogDescription>
+                    Scan the QR, complete the payment, then submit the details for admin review.
+                  </DialogDescription>
                 </DialogHeader>
-                <div className="flex flex-col items-center gap-4 py-6">
-                  <div className="bg-white p-6 rounded-lg">
-                    <img src="/qr-code-payment.png" alt="Payment QR Code" className="w-48 h-48" />
+                <div className="grid gap-6 py-2 md:grid-cols-[220px_1fr]">
+                  <div className="space-y-4">
+                    <div className="rounded-xl bg-white p-4">
+                      <img src="/qr-code-payment.png" alt="Payment QR Code" className="h-48 w-48 rounded-lg object-contain" />
+                    </div>
+                    <div className="space-y-2 text-center md:text-left">
+                      <Badge variant="outline" className="text-xs bg-white/80 text-foreground">
+                        <QrCode className="h-3 w-3 mr-1" />
+                        Static Payment QR Code
+                      </Badge>
+                      <p className="text-sm text-muted-foreground">{PAYMENT_CREDIT_RATE_LABEL}</p>
+                    </div>
                   </div>
-                  <div className="text-center space-y-2">
-                    <p className="text-sm text-muted-foreground">Scan this code to complete your payment</p>
-                    <Badge variant="outline" className="text-xs">
-                      <QrCode className="h-3 w-3 mr-1" />
-                      Static Payment QR Code
-                    </Badge>
+
+                  <div className="space-y-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="amountPaid">Amount paid</Label>
+                      <Input
+                        id="amountPaid"
+                        type="number"
+                        min="1"
+                        step="0.01"
+                        value={formState.amountPaid}
+                        onChange={(event) => setFormState((current) => ({ ...current, amountPaid: event.target.value }))}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="utrNumber">UTR number</Label>
+                      <Input
+                        id="utrNumber"
+                        value={formState.utrNumber}
+                        onChange={(event) => setFormState((current) => ({ ...current, utrNumber: event.target.value }))}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="paymentDate">Payment date</Label>
+                      <Input
+                        id="paymentDate"
+                        type="date"
+                        value={formState.paymentDate}
+                        onChange={(event) => setFormState((current) => ({ ...current, paymentDate: event.target.value }))}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="proof">Payment proof</Label>
+                      <Input
+                        id="proof"
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(event) => setProofFile(event.target.files?.[0] ?? null)}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="studentNote">Note (optional)</Label>
+                      <Textarea
+                        id="studentNote"
+                        value={formState.studentNote}
+                        onChange={(event) => setFormState((current) => ({ ...current, studentNote: event.target.value }))}
+                        placeholder="Add anything the admin should know"
+                      />
+                    </div>
+                    <div className="rounded-lg bg-muted p-3 text-sm">
+                      Derived credits: <span className="font-semibold">{derivedCredits}</span>
+                    </div>
+                    <Button
+                      onClick={handleSubmitPayment}
+                      disabled={
+                        submittingPayment ||
+                        !formState.amountPaid ||
+                        !formState.utrNumber.trim() ||
+                        !formState.paymentDate ||
+                        !proofFile
+                      }
+                    >
+                      {submittingPayment ? "Submitting..." : "Submit payment proof"}
+                    </Button>
                   </div>
                 </div>
               </DialogContent>
@@ -126,7 +270,49 @@ export function CreditsManager() {
         </CardContent>
       </Card>
 
-      {/* Transaction History */}
+      <Card className="md:col-span-3">
+        <CardHeader>
+          <CardTitle>Payment Requests</CardTitle>
+          <CardDescription>Track your submitted payment proofs and their review status</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {payments.length === 0 ? (
+            <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+              No payment requests yet.
+            </div>
+          ) : (
+            payments.map((payment) => (
+              <div key={payment.id} className="rounded-lg border p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div className="space-y-1">
+                    <p className="font-medium">UTR {payment.utrNumber}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Paid INR {payment.amountPaid.toFixed(2)} on {new Date(payment.paymentDate).toLocaleDateString("en-US")}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Credits to add after approval: {payment.creditsToAdd}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Submitted {new Date(payment.createdAt).toLocaleString("en-US")}
+                    </p>
+                    {payment.studentNote && <p className="text-sm">Note: {payment.studentNote}</p>}
+                    {payment.reviewComment && <p className="text-sm">Review comment: {payment.reviewComment}</p>}
+                  </div>
+                  <div className="flex flex-col items-start gap-2 md:items-end">
+                    <Badge variant={getStatusVariant(payment.status)}>{formatStatus(payment.status)}</Badge>
+                    {payment.proofUrl && (
+                      <a href={payment.proofUrl} target="_blank" rel="noreferrer" className="text-sm underline underline-offset-4">
+                        View proof
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
       <Card className="md:col-span-3">
         <CardHeader>
           <CardTitle>Transaction History</CardTitle>
@@ -141,12 +327,12 @@ export function CreditsManager() {
             </TabsList>
 
             <TabsContent value="all" className="space-y-1 mt-4">
-              {transactions.map((transaction, index) => (
+              {transactions.length > 0 ? transactions.map((transaction, index) => (
                 <div key={transaction.id}>
                   <TransactionCard transaction={transaction} />
                   {index < transactions.length - 1 && <Separator />}
                 </div>
-              ))}
+              )) : <div className="text-center py-8 text-muted-foreground">No transactions yet</div>}
             </TabsContent>
 
             <TabsContent value="credits" className="space-y-1 mt-4">

@@ -13,6 +13,10 @@ interface LibraryCardProps {
 }
 
 export function LibraryCard({ library, onEdit, onManageAdmins }: LibraryCardProps) {
+  const latitude = Number(library.latitude)
+  const longitude = Number(library.longitude)
+  const hasCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude)
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4">
@@ -28,7 +32,7 @@ export function LibraryCard({ library, onEdit, onManageAdmins }: LibraryCardProp
             <div className="flex-1 min-w-0">
               <p className="text-sm">{library.address}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                {library.latitude.toFixed(4)}, {library.longitude.toFixed(4)}
+                {hasCoordinates ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` : "N/A"}
               </p>
             </div>
           </div>

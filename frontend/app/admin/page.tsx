@@ -13,11 +13,15 @@ import { BookingFilters } from "@/components/admin/booking-filters"
 import { BookingsTable } from "@/components/admin/bookings-table"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, LibraryIcon, Calendar } from "lucide-react"
+import { Users, LibraryIcon, Calendar, CreditCard } from "lucide-react"
+import { toast } from "sonner";
 import { editUser, searchUsers } from "@/actions/users"
-import { editLibrary, fetchLibraries } from "@/actions/libraries"
+import { editLibrary, fetchLibraries, createLibrary } from "@/actions/libraries"
 import { fetchBookings } from "@/actions/bookings"
 import { addCredits } from "@/actions/credits"
+import { PaymentsManager } from "@/components/admin/payments-manager"
+import { handleApiError } from "@/lib/error-handler";
+import { Plus } from "lucide-react"
 
 export default function Home() {
   const [users, setUsers] = useState<User[]>([])
@@ -26,42 +30,50 @@ export default function Home() {
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [creditsUser, setCreditsUser] = useState<User | null>(null)
   const [editingLibrary, setEditingLibrary] = useState<Library | null>(null)
+  const [isCreateLibraryOpen, setIsCreateLibraryOpen] = useState(false)
   const [managingAdmins, setManagingAdmins] = useState<Library | null>(null)
   const [hasSearched, setHasSearched] = useState(false)
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([])
   const [selectedLibraryName, setSelectedLibraryName] = useState("")
   const [hasFilteredBookings, setHasFilteredBookings] = useState(false)
 
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false)
+  const [isLoadingEditUser, setIsLoadingEditUser] = useState(false)
+  const [isLoadingAddCredits, setIsLoadingAddCredits] = useState(false)
+  const [isLoadingLibraryAction, setIsLoadingLibraryAction] = useState(false)
+  const [isLoadingBookings, setIsLoadingBookings] = useState(false)
+
   const handleSearch = (searchType: string, searchValue: string) => {
+    setIsLoadingSearch(true)
     searchUsers(searchType, searchValue).then((results) => {
       setSearchResults(results.Users?.map((u: any) => ({
-        Id: u.Id,
-        Name: u.Name,
-        Email: u.Email,
-        PhoneNumber: u.PhoneNumber,
-        MemberId: u.MemberId,
-        UserName: u.UserName,
-        CreatedAt: u.CreatedAt,
-        Role: u.Role,
-        Credits: u.CurrentCredits,
+        Id: u.id,
+        MemberId: u.member_id,
+        Name: u.name,
+        Email: u.email,
+        PhoneNumber: u.phone_number,
+        CreatedAt: u.created_at,
+        Credits: u.credits,
+        Role: u.role,
       })) || [])
       setHasSearched(true)
-    }).catch((error: Error) => {
-      console.error("Error searching users:", error)
-      setSearchResults([])
-      setHasSearched(true)
-    })
-  }
+    }).catch((error) => {
+      handleApiError(error, "Failed to search users");
+      setSearchResults([]);
+      setHasSearched(true);
+    }).finally(() => setIsLoadingSearch(false));
+  };
 
   const handleEditUser = (updatedUser: User) => {
-    console.log("Editing user:", updatedUser)
+    setIsLoadingEditUser(true)
     editUser(updatedUser).then(() => {
       setUsers(users.map((user) => (user.Id === updatedUser.Id ? updatedUser : user)))
       setSearchResults(searchResults.map((user) => (user.Id === updatedUser.Id ? updatedUser : user)))
-    }).catch((error: Error) => {
-      console.error("Error editing user:", error)
-    })
-  }
+      toast.success("Success", { description: "User updated successfully" })
+    }).catch((error) => {
+      handleApiError(error, "Failed to edit user");
+    }).finally(() => setIsLoadingEditUser(false));
+  };
 
   const handleDeleteUser = (userId: string) => {
     if (confirm("Are you sure you want to delete this user?")) {
@@ -72,63 +84,83 @@ export default function Home() {
 
   const handleAddCredits = (amount: number, utrNumber: string, comment: string) => {
     if (creditsUser) {
-      
+      setIsLoadingAddCredits(true)
       addCredits(creditsUser, amount, utrNumber, comment).then(() => {
-      }).catch((error: Error) => {
-        console.error("Error adding credits:", error)
-      })
+        toast.success("Success", { description: "Credits added successfully" })
+      }).catch((error) => {
+        handleApiError(error, "Failed to add credits");
+      }).finally(() => setIsLoadingAddCredits(false));
     }
   }
 
-  const handleEditLibrary = (updatedLibrary: Library) => {
-    editLibrary(updatedLibrary).then(() => {
-      setLibraries(libraries.map((lib) => (lib.id == updatedLibrary.id ? updatedLibrary : lib)))
-    }).catch((error: Error) => {
-      console.error("Error editing library:", error)
-    })
-  }
+  const handleSaveLibrary = (libraryData: Library) => {
+    setIsLoadingLibraryAction(true)
+    if (libraryData.id) {
+      // Update existing
+      editLibrary(libraryData).then(() => {
+        setLibraries(libraries.map((lib) => (lib.id === libraryData.id ? libraryData : lib)))
+        toast.success("Success", { description: "Library updated successfully" })
+      }).catch((error) => {
+        handleApiError(error, "Failed to edit library");
+      }).finally(() => setIsLoadingLibraryAction(false));
+    } else {
+      // Create new
+      createLibrary(libraryData).then((data) => {
+        const newLib = data.Library
+        const formattedLib = {
+          id: newLib.id,
+          name: newLib.name,
+          address: newLib.address,
+          latitude: newLib.latitude,
+          longitude: newLib.longitude,
+          admins: [],
+        }
+        setLibraries([...libraries, formattedLib])
+        toast.success("Success", { description: "Library created successfully" })
+      }).catch((error) => {
+        handleApiError(error, "Failed to create library");
+      }).finally(() => setIsLoadingLibraryAction(false));
+    }
+  };
 
   const handleFilterBookings = (libraryId: number, startDate: string, endDate: string) => {
-    const library = libraries.find((lib) => lib.id === libraryId)
-    if (!library) return
-
+    setIsLoadingBookings(true)
     fetchBookings(libraryId, startDate, endDate).then((data) => {
-      setFilteredBookings(data.Bookings?.map((b: any) => ({
-        id: b.Id,
-        userId: b.UserId,
-        memberId: b.MemberId,
-        libraryId: b.LibraryId,
-        userName: b.UserName,
-        startTime: b.StartTime,
-        endTime: b.EndTime,
-        status: b.Status,
+      setFilteredBookings(data?.map((b: any) => ({
+        id: b.id,
+        memberId: b.member_id,
+        libraryId: parseInt(b.library_id),
+        userName: b.user_name,
+        startTime: b.start_time,
+        endTime: b.end_time,
+        status: b.status as "active" | "completed" | "cancelled",
       })) || [])
 
-      setSelectedLibraryName(library.name)
+      const library = libraries.find((lib) => lib.id === libraryId)
+      setSelectedLibraryName(library?.name ?? "Unknown Library")
       setHasFilteredBookings(true)
-    }).catch((error: Error) => {
-      console.error("Error fetching bookings:", error)
-      setFilteredBookings([])
-      setHasFilteredBookings(true)
-    })
-  }
+    }).catch((error) => {
+      handleApiError(error, "Failed to fetch bookings");
+      setFilteredBookings([]);
+      setHasFilteredBookings(true);
+    }).finally(() => setIsLoadingBookings(false));
+  };
 
   useEffect(() => {
     fetchLibraries("", true).then((libs) => {
-
       setLibraries(libs?.Libraries?.map((lib: any) => ({
-        id: lib.Id,
-        name: lib.Name,
-        address: lib.Address,
-        latitude: lib.Latitude,
-        longitude: lib.Longitude,
-        admins: lib.Admins || [],
+        id: lib.id,
+        name: lib.name,
+        address: lib.address,
+        latitude: lib.latitude,
+        longitude: lib.longitude,
+        admins: lib.admins,
       })) || [])
-    }).catch((error: Error) => {
-      console.error("Error fetching libraries:", error)
-      setLibraries([])
-    })
-  }, [])
+    }).catch((error) => {
+      handleApiError(error, "Error fetching libraries");
+      setLibraries([]);
+    });
+  }, []);
 
 
   return (
@@ -172,7 +204,7 @@ export default function Home() {
 
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Users
@@ -185,15 +217,21 @@ export default function Home() {
               <Calendar className="h-4 w-4" />
               Bookings
             </TabsTrigger>
+            <TabsTrigger value="payments" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Payments
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="space-y-6">
             <div className="bg-card border rounded-lg p-6">
               <h2 className="text-lg font-semibold mb-4">Search Users</h2>
-              <UserSearch onSearch={handleSearch} />
+              <UserSearch onSearch={handleSearch} disabled={isLoadingSearch} />
             </div>
 
-            {hasSearched && (
+            {isLoadingSearch && <div className="text-center py-4">Searching users...</div>}
+
+            {hasSearched && !isLoadingSearch && (
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold">Search Results ({searchResults.length})</h2>
@@ -208,7 +246,7 @@ export default function Home() {
                       <div key={user.Id} className="relative">
                         <UserDetailsCard user={user} onEdit={setEditingUser} onDelete={handleDeleteUser} />
                         <Button variant="secondary" className="w-full mt-2" onClick={() => setCreditsUser(user)}>
-                          Add Credits
+                          {isLoadingAddCredits ? "Processing..." : "Add Credits"}
                         </Button>
                       </div>
                     ))}
@@ -221,6 +259,10 @@ export default function Home() {
           <TabsContent value="libraries" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">All Libraries ({libraries.length})</h2>
+              <Button onClick={() => setIsCreateLibraryOpen(true)} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Create Library
+              </Button>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {libraries.map((library) => (
@@ -242,6 +284,10 @@ export default function Home() {
 
             {hasFilteredBookings && <BookingsTable bookings={filteredBookings} libraryName={selectedLibraryName} />}
           </TabsContent>
+
+          <TabsContent value="payments" className="space-y-6">
+            <PaymentsManager />
+          </TabsContent>
         </Tabs>
       </main>
 
@@ -262,16 +308,19 @@ export default function Home() {
 
       <LibraryEditDialog
         library={editingLibrary}
-        open={!!editingLibrary}
-        onClose={() => setEditingLibrary(null)}
-        onSave={handleEditLibrary}
+        open={!!editingLibrary || isCreateLibraryOpen}
+        onClose={() => {
+          setEditingLibrary(null)
+          setIsCreateLibraryOpen(false)
+        }}
+        onSave={handleSaveLibrary}
       />
 
       <ManageAdminsDialog
         library={managingAdmins}
         open={!!managingAdmins}
         onClose={() => setManagingAdmins(null)}
-        onSave={handleEditLibrary}
+        onSave={handleSaveLibrary}
       />
     </div>
   )
