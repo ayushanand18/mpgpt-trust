@@ -186,13 +186,14 @@ export function CreditsManager() {
                   Add Credits
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-xl">
+              <DialogContent className="sm:max-w-xl flex flex-col max-h-[90vh]">
                 <DialogHeader>
                   <DialogTitle>Add Credits via QR Code</DialogTitle>
                   <DialogDescription>
                     Scan the QR, complete the payment, then submit the details for admin review.
                   </DialogDescription>
                 </DialogHeader>
+                <div className="flex-1 overflow-y-auto min-h-0">
                 <div className="grid gap-6 py-2 md:grid-cols-[220px_1fr]">
                   <div className="space-y-4">
                     <div className="rounded-xl bg-white p-4">
@@ -270,6 +271,7 @@ export function CreditsManager() {
                       {submittingPayment ? "Submitting..." : "Submit payment proof"}
                     </Button>
                   </div>
+                </div>
                 </div>
               </DialogContent>
             </Dialog>
