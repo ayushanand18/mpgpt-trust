@@ -15,14 +15,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { StartTime, EndTime, LibraryId, Purpose, MemberId } = body
+    const { StartTime, EndTime, LibraryId, Purpose } = body
+    let { MemberId } = body
 
-    // Users can only create bookings for themselves, admins/superuser can create for anyone
-    if (authUser.role !== ROLES.ADMIN && authUser.role !== ROLES.SUPERUSER && MemberId !== authUser.memberId) {
-      return NextResponse.json(
-        { Error: { Message: 'Forbidden: Can only create bookings for yourself' }, Data: null },
-        { status: 403 }
-      )
+    // Non-admin/superuser users can only create bookings for themselves
+    if (authUser.role !== ROLES.ADMIN && authUser.role !== ROLES.SUPERUSER) {
+      if (!authUser.memberId) {
+        return NextResponse.json(
+          { Error: { Message: 'Forbidden: No member account found' }, Data: null },
+          { status: 403 }
+        )
+      }
+      MemberId = authUser.memberId
     }
 
     if (!StartTime || !EndTime || !LibraryId || !MemberId) {

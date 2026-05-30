@@ -26,7 +26,7 @@ import {
   calculateCreditsFromPayment,
 } from "@/lib/constants"
 import type { PaymentRequest } from "@/types"
-import { Plus, QrCode, TrendingDown, TrendingUp, Wallet } from "lucide-react"
+import { Loader2, Plus, QrCode, TrendingDown, TrendingUp, Wallet } from "lucide-react"
 import { handleApiError } from "@/lib/error-handler";
 
 type Transaction = {
@@ -57,6 +57,7 @@ function getStatusVariant(status: PaymentRequest["status"]): "default" | "destru
 }
 
 export function CreditsManager() {
+  const [loading, setLoading] = useState(true)
   const [currentBalance, setCurrentBalance] = useState(0)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [payments, setPayments] = useState<PaymentRequest[]>([])
@@ -85,6 +86,8 @@ export function CreditsManager() {
       setPayments(paymentData)
     } catch (error) {
       handleApiError(error, "Unable to load credits");
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -171,7 +174,11 @@ export function CreditsManager() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p className="text-5xl font-bold">{currentBalance}</p>
+            {loading ? (
+              <Loader2 className="h-10 w-10 animate-spin opacity-70" />
+            ) : (
+              <p className="text-5xl font-bold">{currentBalance}</p>
+            )}
             <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="secondary" className="w-full sm:w-auto">
