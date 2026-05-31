@@ -22,9 +22,9 @@ export function UserSearch({ onSearch, disabled }: UserSearchProps) {
   }
 
   return (
-    <div className="flex gap-3">
+    <div className="flex flex-col gap-3 sm:flex-row">
       <Select value={searchType} onValueChange={setSearchType} disabled={disabled}>
-        <SelectTrigger className="w-48">
+        <SelectTrigger className="w-full sm:w-48">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -33,15 +33,16 @@ export function UserSearch({ onSearch, disabled }: UserSearchProps) {
           <SelectItem value="phoneNumber">Phone Number</SelectItem>
         </SelectContent>
       </Select>
-      <div className="flex-1 flex gap-2">
+      <div className="flex flex-1 gap-2">
         <Input
           placeholder={`Search by ${searchType}...`}
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           disabled={disabled}
+          className="flex-1"
         />
-        <Button onClick={handleSearch} disabled={disabled}>
+        <Button onClick={handleSearch} disabled={disabled} className="shrink-0">
           {disabled ? "Searching..." : <><Search className="h-4 w-4 mr-2" /> Search</>}
         </Button>
       </div>
