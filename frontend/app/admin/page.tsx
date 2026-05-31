@@ -137,8 +137,7 @@ export default function Home() {
         status: b.status as "active" | "completed" | "cancelled",
       })) || [])
 
-      const library = libraries.find((lib) => lib.id === libraryId)
-      setSelectedLibraryName(library?.name ?? "Unknown Library")
+      setSelectedLibraryName((data as any)?.[0]?.library_name ?? "Unknown Library")
       setHasFilteredBookings(true)
     }).catch((error) => {
       handleApiError(error, "Failed to fetch bookings");
