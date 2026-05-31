@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useEffect, useState } from "react"
 import type { User, Library, Booking } from "@/types"
 import { UserSearch } from "@/components/admin/user-search"
@@ -166,22 +167,35 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">
-              Library Management System
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Admin Dashboard
-            </p>
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm">
+              <Image
+                src="/library_logo_main.jpg"
+                alt="MPGPT logo"
+                width={32}
+                height={32}
+                priority
+                className="h-8 w-8 rounded-md object-cover"
+              />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-2xl font-semibold leading-tight">
+                MPGPT
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                Admin Dashboard
+              </p>
+            </div>
           </div>
 
-          <div>
+          <div className="flex items-center shrink-0">
             <Button
               onClick={async () => {
                 window.location.href = '/'
               }}
               variant={"ghost"}
+              size="sm"
               className="cursor-pointer"
             >
               Home
@@ -193,6 +207,7 @@ export default function Home() {
                 window.location.href = '/'
               }}
               variant={"default"}
+              size="sm"
               className="cursor-pointer"
             >
               Logout
@@ -204,22 +219,22 @@ export default function Home() {
 
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Users
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="users" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3">
+              <Users className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Users</span>
             </TabsTrigger>
-            <TabsTrigger value="libraries" className="flex items-center gap-2">
-              <LibraryIcon className="h-4 w-4" />
-              Libraries
+            <TabsTrigger value="libraries" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3">
+              <LibraryIcon className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Libraries</span>
             </TabsTrigger>
-            <TabsTrigger value="bookings" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Bookings
+            <TabsTrigger value="bookings" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3">
+              <Calendar className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Bookings</span>
             </TabsTrigger>
-            <TabsTrigger value="payments" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              Payments
+            <TabsTrigger value="payments" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3">
+              <CreditCard className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Payments</span>
             </TabsTrigger>
           </TabsList>
 

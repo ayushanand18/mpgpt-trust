@@ -63,7 +63,7 @@ export default function Home() {
 
             <div className="mt-6 space-y-5">
               <h2 className="max-w-3xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl sm:leading-[1.05]">
-                Munshi Premchand Gramin Pustakalay - Library Management System
+                Munshi Premchand Gramin Pustakalay - MPGPT
               </h2>
               <p className="max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
                 Designed for day-to-day library work, this platform supports student access,
