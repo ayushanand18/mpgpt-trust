@@ -5,77 +5,89 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Search, MapPin, Calendar, Clock } from "lucide-react"
+import { Search, MapPin, Calendar } from "lucide-react"
 import { toast } from "sonner";
 import { Library } from "@/types"
 import { createBooking, fetchLibraries } from "@/actions/libraries"
 import { useDebounce } from "@/hooks/use-debounce"
 import { handleApiError } from "@/lib/error-handler";
 
-export function NewBookingDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+interface NewBookingDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onBookingCreated?: () => void
+}
+
+export function NewBookingDialog({ open, onOpenChange, onBookingCreated }: NewBookingDialogProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const debouncedSearchTerm = useDebounce(searchTerm)
   const [selectedLibrary, setSelectedLibrary] = useState<Library | null>(null)
   const [selectedDate, setSelectedDate] = useState("")
+  const [firstHalf, setFirstHalf] = useState(false)
+  const [secondHalf, setSecondHalf] = useState(false)
   const [purpose, setPurpose] = useState("")
   const [libraries, setLibraries] = useState<Library[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (!debouncedSearchTerm) return
-    fetchSessionAndLibraries()
+    fetchLibraries(debouncedSearchTerm).then((librariesData) => {
+      setLibraries(
+        librariesData?.Libraries?.map((lib: any): Library => ({
+          id: lib.Id ?? lib.id,
+          name: lib.Name ?? lib.name,
+          address: lib.Address ?? lib.address,
+          latitude: lib.Latitude ?? lib.latitude,
+          longitude: lib.Longitude ?? lib.longitude,
+          admins: []
+        }))
+      )
+    })
   }, [debouncedSearchTerm])
 
-  const fetchSessionAndLibraries = async () => {
-    let librariesData = await fetchLibraries(debouncedSearchTerm)
-
-    setLibraries(
-      librariesData?.Libraries?.map((lib: any): Library => ({
-        id: lib.Id ?? lib.id,
-        name: lib.Name ?? lib.name,
-        address: lib.Address ?? lib.address,
-        latitude: lib.Latitude ?? lib.latitude,
-        longitude: lib.Longitude ?? lib.longitude,
-        admins: []
-      }))
-    )
-  }
-
   const handleSubmit = () => {
-    if (!selectedLibrary || !selectedDate || !purpose) {
+    if (!selectedLibrary || !selectedDate || (!firstHalf && !secondHalf) || !purpose) {
       toast.error("Missing information", {
-        description: "Please fill in all required fields.",
+        description: !firstHalf && !secondHalf
+          ? "Please select at least one time slot."
+          : "Please fill in all required fields.",
       })
       return
     }
-    
-    createBooking(selectedLibrary.id, selectedDate, purpose).then(() => {
-      toast.success("Booking created", {
-        description: `Your booking at ${selectedLibrary.name} has been confirmed.`,
+
+    setIsSubmitting(true)
+    createBooking(selectedLibrary.id, selectedDate, { firstHalf, secondHalf }, purpose)
+      .then(() => {
+        toast.success("Booking created", {
+          description: `Your booking at ${selectedLibrary.name} has been confirmed.`,
+        })
+        onOpenChange(false)
+        onBookingCreated?.()
+        setSelectedLibrary(null)
+        setSelectedDate("")
+        setFirstHalf(false)
+        setSecondHalf(false)
+        setPurpose("")
+        setSearchTerm("")
       })
-      onOpenChange(false)
-      // Reset form
-      setSelectedLibrary(null)
-      setSelectedDate("")
-      setPurpose("")
-      setSearchTerm("")
-    }).catch((error) => {
-      handleApiError(error, `Failed to create booking`);
-    });
+      .catch((error) => {
+        handleApiError(error, `Failed to create booking`)
+      })
+      .finally(() => setIsSubmitting(false))
   }
-    
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Booking</DialogTitle>
-          <DialogDescription>Select a library and choose your preferred date and time</DialogDescription>
+          <DialogDescription>Select a library, date, and time slot</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Library Search and Selection */}
+          {/* Library Search */}
           <div className="space-y-4">
             <div>
               <Label htmlFor="search">Search Libraries</Label>
@@ -95,14 +107,15 @@ export function NewBookingDialog({ open, onOpenChange }: { open: boolean; onOpen
               {libraries.map((library) => (
                 <Card
                   key={library.id}
-                  className={`cursor-pointer transition-colors ${selectedLibrary?.id === library.id ? "border-primary bg-primary/5" : "hover:border-primary/50"
-                    }`}
+                  className={`cursor-pointer transition-colors ${
+                    selectedLibrary?.id === library.id
+                      ? "border-primary bg-primary/5"
+                      : "hover:border-primary/50"
+                  }`}
                   onClick={() => setSelectedLibrary(library)}
                 >
                   <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="text-base">{library.name}</CardTitle>
-                    </div>
+                    <CardTitle className="text-base">{library.name}</CardTitle>
                     <CardDescription className="flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
                       {library.address}
@@ -117,7 +130,7 @@ export function NewBookingDialog({ open, onOpenChange }: { open: boolean; onOpen
             <>
               <Separator />
 
-              {/* Date Selection */}
+              {/* Date */}
               <div className="space-y-2">
                 <Label htmlFor="date" className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
@@ -132,6 +145,40 @@ export function NewBookingDialog({ open, onOpenChange }: { open: boolean; onOpen
                 />
               </div>
 
+              {/* Slots */}
+              {selectedDate && (
+                <div className="space-y-2">
+                  <Label>Time Slot</Label>
+                  <p className="text-xs text-muted-foreground">Select one or both slots</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFirstHalf(!firstHalf)}
+                      className={`rounded-lg border p-4 text-left transition-colors ${
+                        firstHalf
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <p className="font-medium text-sm">1st Half</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">6:00 AM – 12:00 PM</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSecondHalf(!secondHalf)}
+                      className={`rounded-lg border p-4 text-left transition-colors ${
+                        secondHalf
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <p className="font-medium text-sm">2nd Half</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">12:00 PM – 6:00 PM</p>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Purpose */}
               <div className="space-y-2">
                 <Label htmlFor="purpose">Purpose of Visit</Label>
@@ -143,8 +190,8 @@ export function NewBookingDialog({ open, onOpenChange }: { open: boolean; onOpen
                 />
               </div>
 
-              <Button onClick={handleSubmit} className="w-full">
-                Confirm Booking
+              <Button onClick={handleSubmit} className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Creating..." : "Confirm Booking"}
               </Button>
             </>
           )}

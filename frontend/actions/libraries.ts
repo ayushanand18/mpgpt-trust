@@ -32,14 +32,22 @@ export async function fetchLibraries(searchTerm: string, fetchAdmins: boolean = 
     return respJson.Data
 }
 
-export async function createBooking(libraryId: number, date: string, purpose: string) {
+export async function createBooking(
+    libraryId: number,
+    date: string,
+    slots: { firstHalf: boolean; secondHalf: boolean },
+    purpose: string,
+) {
     const { data: { session }, error } = await supabase.auth.getSession()
     if (error) {
         throw new Error('No active session found')
     }
 
-    const start = new Date(`${date}T00:00:00Z`).toISOString()
-    const end = new Date(new Date(`${date}T00:00:00Z`).setUTCDate(new Date(`${date}T00:00:00Z`).getUTCDate() + 1)).toISOString()
+    // IST slots: 1st half 6am–12pm, 2nd half 12pm–6pm
+    const startHour = slots.firstHalf ? "06:00:00" : "12:00:00"
+    const endHour = slots.secondHalf ? "18:00:00" : "12:00:00"
+    const start = new Date(`${date}T${startHour}+05:30`).toISOString()
+    const end = new Date(`${date}T${endHour}+05:30`).toISOString()
 
     const res = await fetch(
         `/api/booking`,

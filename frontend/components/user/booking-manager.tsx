@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar, Clock, MapPin, Plus, X } from "lucide-react"
+import { Calendar, Clock, Loader2, MapPin, Plus, X } from "lucide-react"
 import { NewBookingDialog } from "@/components/user/new-booking-dialog"
 import { toast } from "sonner";
 import { fetchBookings } from "@/actions/bookings"
@@ -16,51 +16,75 @@ type LocalBooking = {
   id: string
   libraryName: string
   location: string
-  date: string
-  time: string
+  startTime: string
+  endTime: string
   status: "upcoming" | "today" | "past" | "cancelled"
   purpose: string
 }
 
+function deriveStatus(startTimeStr: string, apiStatus: string): LocalBooking["status"] {
+  if (apiStatus === "cancelled") return "cancelled"
+  const d = new Date(startTimeStr)
+  const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const startOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+  if (d >= startOfToday && d < startOfTomorrow) return "today"
+  if (d >= startOfTomorrow) return "upcoming"
+  return "past"
+}
+
 export function BookingManager() {
   const [showNewBooking, setShowNewBooking] = useState(false)
-  const [bookings, setBookings] = useState<LocalBooking[]>([
-  ])
+  const [bookings, setBookings] = useState<LocalBooking[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const loadBookings = useCallback(() => {
+    setIsLoading(true)
+    fetchBookings()
+      .then((data) => {
+        setBookings(
+          data?.map((booking: any) => {
+            const startTime = booking.StartTime ?? booking.start_time ?? ""
+            const apiStatus = booking.Status ?? booking.status ?? "active"
+            return {
+              id: booking.Id ?? booking.id,
+              libraryName: booking.LibraryName ?? booking.library_name ?? "Library",
+              location: booking.LibraryAddress ?? booking.library_address ?? "-",
+              startTime,
+              endTime: booking.EndTime ?? booking.end_time ?? "",
+              status: deriveStatus(startTime, apiStatus),
+              purpose: booking.Purpose ?? booking.purpose ?? "",
+            }
+          }) || []
+        )
+      })
+      .catch((error) => {
+        handleApiError(error, "Failed to load bookings")
+      })
+      .finally(() => setIsLoading(false))
+  }, [])
 
   useEffect(() => {
-    fetchBookings().
-      then((data) => {
-        setBookings(data?.map((booking: any) => ({
-          id: booking.Id ?? booking.id,
-          libraryName: booking.LibraryName ?? booking.library_name ?? "Library",
-          location: booking.LibraryAddress ?? booking.library_address ?? "-",
-          date: booking.StartTime ?? booking.start_time ?? "",
-          time: booking.StartTime ?? booking.start_time ?? "",
-          status: "upcoming", 
-          purpose: booking.Purpose ?? booking.purpose ?? "",
-        })) || [])
-      }).catch((error) => {
-        console.error("Error fetching bookings:", error)
-      })
-  }, [])
+    loadBookings()
+  }, [loadBookings])
+
   const handleCancelBooking = (bookingId: string) => {
     setBookings(
-      bookings.map((booking) => (booking.id === bookingId ? { ...booking, status: "cancelled" as const } : booking)),
+      bookings.map((booking) =>
+        booking.id === bookingId ? { ...booking, status: "cancelled" as const } : booking
+      )
     )
     toast.success("Booking cancelled", {
       description: "Your booking has been cancelled successfully.",
     })
   }
 
-  const now = new Date()
+  const todayBookings = bookings.filter((b) => b.status === "today")
+  const upcomingBookings = bookings.filter((b) => b.status === "upcoming")
+  const pastBookings = bookings.filter((b) => b.status === "past" || b.status === "cancelled")
 
-  const todayBookings = bookings.filter(b => {
-    const d = new Date(b.date)
-    return d.toDateString() === now.toDateString()
-  })
-  const upcomingBookings = bookings.filter(b => new Date(b.date) > now)
-  const pastBookings = bookings.filter(b => new Date(b.date) < now)
-
+  const formatTime = (iso: string) =>
+    new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
 
   const BookingCard = ({ booking }: { booking: LocalBooking }) => (
     <Card>
@@ -83,7 +107,7 @@ export function BookingManager() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="h-4 w-4" />
             <span>
-              {new Date(booking.date).toLocaleDateString("en-US", {
+              {new Date(booking.startTime).toLocaleDateString("en-US", {
                 weekday: "long",
                 year: "numeric",
                 month: "long",
@@ -91,13 +115,24 @@ export function BookingManager() {
               })}
             </span>
           </div>
+          {booking.startTime && booking.endTime && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              <span>{formatTime(booking.startTime)} – {formatTime(booking.endTime)}</span>
+            </div>
+          )}
           <Separator />
           <div>
             <p className="text-sm font-medium">Purpose</p>
             <p className="text-sm text-muted-foreground">{booking.purpose}</p>
           </div>
           {(booking.status === "today" || booking.status === "upcoming") && (
-            <Button variant="destructive" size="sm" className="w-full" onClick={() => handleCancelBooking(booking.id)}>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="w-full"
+              onClick={() => handleCancelBooking(booking.id)}
+            >
               <X className="h-4 w-4 mr-2" />
               Cancel Booking
             </Button>
@@ -124,42 +159,53 @@ export function BookingManager() {
             </div>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="upcoming" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="upcoming">Upcoming ({upcomingBookings.length})</TabsTrigger>
-                <TabsTrigger value="today">Today ({todayBookings.length})</TabsTrigger>
-                <TabsTrigger value="past">Past ({pastBookings.length})</TabsTrigger>
-              </TabsList>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Loading bookings...</span>
+              </div>
+            ) : (
+              <Tabs defaultValue="upcoming" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="upcoming">Upcoming ({upcomingBookings.length})</TabsTrigger>
+                  <TabsTrigger value="today">Today ({todayBookings.length})</TabsTrigger>
+                  <TabsTrigger value="past">Past ({pastBookings.length})</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="upcoming" className="space-y-4 mt-4">
-                {upcomingBookings.length > 0 ? (
-                  upcomingBookings.map((booking) => <BookingCard key={booking.id} booking={booking} />)
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">No upcoming bookings</div>
-                )}
-              </TabsContent>
+                <TabsContent value="upcoming" className="space-y-4 mt-4">
+                  {upcomingBookings.length > 0 ? (
+                    upcomingBookings.map((booking) => <BookingCard key={booking.id} booking={booking} />)
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">No upcoming bookings</div>
+                  )}
+                </TabsContent>
 
-              <TabsContent value="today" className="space-y-4 mt-4">
-                {todayBookings.length > 0 ? (
-                  todayBookings.map((booking) => <BookingCard key={booking.id} booking={booking} />)
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">No bookings for today</div>
-                )}
-              </TabsContent>
+                <TabsContent value="today" className="space-y-4 mt-4">
+                  {todayBookings.length > 0 ? (
+                    todayBookings.map((booking) => <BookingCard key={booking.id} booking={booking} />)
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">No bookings for today</div>
+                  )}
+                </TabsContent>
 
-              <TabsContent value="past" className="space-y-4 mt-4">
-                {pastBookings.length > 0 ? (
-                  pastBookings.map((booking) => <BookingCard key={booking.id} booking={booking} />)
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">No past bookings</div>
-                )}
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="past" className="space-y-4 mt-4">
+                  {pastBookings.length > 0 ? (
+                    pastBookings.map((booking) => <BookingCard key={booking.id} booking={booking} />)
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">No past bookings</div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      <NewBookingDialog open={showNewBooking} onOpenChange={setShowNewBooking} />
+      <NewBookingDialog
+        open={showNewBooking}
+        onOpenChange={setShowNewBooking}
+        onBookingCreated={loadBookings}
+      />
     </>
   )
 }
